@@ -11,8 +11,10 @@ import {
   MessageCircle,
   Clock,
   Check,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CookTimer } from "@/components/cook/cook-timer";
 import { getRecipeById } from "@/data/mock-data";
 
 export default function CookModePage() {
@@ -23,6 +25,9 @@ export default function CookModePage() {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [direction, setDirection] = useState(0);
   const sessionIdRef = useRef<string | null>(null);
+  const [timerAutoStart, setTimerAutoStart] = useState(false);
+  const [alertType, setAlertType] = useState<"sound" | "voice" | "both" | "none">("sound");
+  const [showSettings, setShowSettings] = useState(false);
 
   // Resume existing session or start a new one
   useEffect(() => {
@@ -158,14 +163,62 @@ export default function CookModePage() {
             Step {currentStep + 1} of {totalSteps}
           </p>
         </div>
-        <button
-          onClick={() => router.push(`/ask?recipe=${recipe.id}&step=${currentStep + 1}`)}
-          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
-          aria-label="Ask CookGenie for help"
-        >
-          <MessageCircle className="h-5 w-5 text-primary" />
-        </button>
+        <div className="flex gap-1">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
+            aria-label="Timer settings"
+          >
+            <Settings className={`h-4 w-4 ${showSettings ? "text-primary" : "text-muted-foreground"}`} />
+          </button>
+          <button
+            onClick={() => router.push(`/ask?recipe=${recipe.id}&step=${currentStep + 1}`)}
+            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
+            aria-label="Ask CookGenie for help"
+          >
+            <MessageCircle className="h-5 w-5 text-primary" />
+          </button>
+        </div>
       </header>
+
+      {/* Timer Settings */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden border-b border-border"
+          >
+            <div className="px-4 py-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Timer Settings</p>
+              <label className="flex items-center justify-between">
+                <span className="text-sm">Auto-start timers</span>
+                <button
+                  onClick={() => setTimerAutoStart(!timerAutoStart)}
+                  className={`relative h-6 w-11 rounded-full transition-colors ${timerAutoStart ? "bg-primary" : "bg-muted"}`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${timerAutoStart ? "translate-x-5" : ""}`} />
+                </button>
+              </label>
+              <div>
+                <span className="text-sm">Alert type</span>
+                <div className="mt-1.5 flex gap-2">
+                  {(["sound", "voice", "both", "none"] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setAlertType(type)}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${alertType === type ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Progress Bar */}
       <div className="px-4">
@@ -203,13 +256,14 @@ export default function CookModePage() {
               {step.instruction}
             </p>
 
-            {/* Duration */}
+            {/* Timer */}
             {step.duration && (
-              <div className="mt-5 flex justify-center">
-                <span className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  {step.duration} minutes
-                </span>
+              <div className="mt-5">
+                <CookTimer
+                  durationMinutes={step.duration}
+                  autoStart={timerAutoStart}
+                  alertType={alertType}
+                />
               </div>
             )}
 

@@ -1,5 +1,14 @@
 # CookGenie — Build & Release Log
 
+## [Unreleased] — 2026-03-31
+
+### Cook Timer UI Component
+- `src/components/cook/cook-timer.tsx` — countdown timer with circular progress ring for step-by-step cook mode
+- Circular SVG progress ring (framer-motion animated) with color states: primary (running), green (complete), muted (idle/paused)
+- Full control set: Start, Pause/Resume, Reset, +30s, +1m time additions
+- Completion alerts: Web Audio API beeps, SpeechSynthesis voice, both, or none
+- Consumes `useTimer` hook from `@/hooks/use-timer`; returns null when duration is 0/undefined
+
 ## [1.3.0] — 2026-03-30 — Audit P3: All 5 Remaining Items Complete
 
 ### P3.1 — DB-Backed Recipe API Routes

@@ -327,3 +327,45 @@ export async function getSavedRecipes(userId: string) {
     .where(eq(schema.savedRecipes.userId, userId))
     .orderBy(desc(schema.savedRecipes.savedAt));
 }
+
+// ─── Cooking History & Stats ──────────────────────────
+
+export async function getCompletedSessions(userId: string) {
+  const db = getDb();
+  return db
+    .select()
+    .from(schema.cookingSessions)
+    .where(
+      and(
+        eq(schema.cookingSessions.userId, userId),
+        eq(schema.cookingSessions.status, "completed")
+      )
+    )
+    .orderBy(desc(schema.cookingSessions.completedAt));
+}
+
+export async function getCookingStats(
+  userId: string
+): Promise<{ totalCompleted: number; totalMinutes: number }> {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(schema.cookingSessions)
+    .where(
+      and(
+        eq(schema.cookingSessions.userId, userId),
+        eq(schema.cookingSessions.status, "completed")
+      )
+    );
+
+  let totalMinutes = 0;
+  for (const row of rows) {
+    const startMs = row.startedAt?.getTime() ?? 0;
+    const endMs = row.completedAt?.getTime() ?? 0;
+    if (startMs && endMs) {
+      totalMinutes += Math.round((endMs - startMs) / 60_000);
+    }
+  }
+
+  return { totalCompleted: rows.length, totalMinutes };
+}

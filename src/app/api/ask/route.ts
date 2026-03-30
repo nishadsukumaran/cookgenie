@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { detectIntent, intentToRescueProblem } from "@/lib/hybrid/intent";
 import { getRescue } from "@/lib/engines/rescue";
 import { findSubstitutesFor } from "@/lib/engines/substitution";
-import { planCalorieReduction, estimateCalories } from "@/lib/engines/transformation";
+import { planCalorieReduction, estimateCalories, transformRecipe } from "@/lib/engines/transformation";
 import { applyEdit } from "@/lib/engines/recipe-edit";
 import type { EditAction } from "@/lib/engines/recipe-edit/types";
 import { getRecipeById } from "@/data/mock-data";
 import { ai } from "@/lib/ai";
+import { arbitrate } from "@/lib/ai/arbitration";
 import { logRescueQuery, logAiInteraction } from "@/lib/db/queries";
 import type { HybridResponse } from "@/lib/hybrid/types";
 import type { RescueQueryResponse } from "@/lib/db/schema";
@@ -60,6 +61,9 @@ export async function POST(req: Request) {
     case "edit":
       ({ response, trace: debugTrace } = await handleEdit(intent, message, context, trace));
       break;
+    case "scaling":
+      ({ response, trace: debugTrace } = await handleScaling(intent, message, context, trace));
+      break;
     default:
       ({ response, trace: debugTrace } = await handleGeneral(message, context, trace));
       break;
@@ -93,7 +97,105 @@ async function handleRescue(
 
   if (!hadStructured) trace.addFlag("no-structured-match");
 
-  // AI enrichment — explains the structured fix, cannot replace it
+  // ─── High-stakes arbitration for "slightly-burned" ──
+  if (problem === "slightly-burned") {
+    const arbStart = Date.now();
+    const arbResult = await arbitrate({
+      userInput: message,
+      rescueProblem: problem,
+      recipeName: context?.recipeName,
+      cuisine: context?.cuisine,
+      currentStep: context?.currentStep,
+      hasStructuredKnowledge: hadStructured,
+    });
+    trace.addStage("arbitration", `Tiers: ${arbResult.tiersUsed}, validated: ${arbResult.validationTriggered}`, Date.now() - arbStart, {
+      tiersUsed: arbResult.tiersUsed,
+      validationTriggered: arbResult.validationTriggered,
+      guardrailApplied: arbResult.guardrailApplied,
+      validationReasons: arbResult.validationReasons.join("; ") || "none",
+      arbitrationTriggered: arbResult.arbitrationTriggered,
+      arbitrationReason: arbResult.arbitrationReason ?? "n/a",
+      guardrailCorrections: arbResult.guardrailCorrections.join("; ") || "none",
+    });
+
+    const explanation = arbResult.final.notes;
+
+    let response: HybridResponse;
+
+    if (rescue?.found && rescue.solution) {
+      const sol = rescue.solution;
+      response = {
+        type: "rescue",
+        fix: {
+          title: `Fix: ${sol.label}`,
+          instruction: sol.immediateFix.instruction,
+          ingredients: sol.immediateFix.ingredients,
+          urgency: rescue.urgency === "high" ? "immediate" : "when-ready",
+          duration: sol.immediateFix.duration,
+        },
+        alternatives: [{
+          title: "Gradual Recovery",
+          instruction: sol.gradualFix.instruction,
+          ingredients: sol.gradualFix.ingredients,
+          tradeoff: sol.gradualFix.duration ? `Takes ${sol.gradualFix.duration}` : "Takes longer but more thorough",
+        }],
+        impact: {
+          taste: { direction: "better", description: "Following these fixes should restore the balance" },
+          texture: { direction: "neutral", description: "No significant texture change expected" },
+          authenticity: { direction: "neutral", description: "Standard cooking corrections" },
+        },
+        explanation,
+        proTip: sol.preventionTip,
+        source: {
+          structured: true,
+          ai: true,
+          confidence: intent.confidence >= 0.7 ? "high" : "medium",
+        },
+      };
+    } else {
+      response = {
+        type: "rescue",
+        fix: { title: "CookPilot's Advice", instruction: explanation, urgency: "when-ready" },
+        alternatives: [],
+        impact: {
+          taste: { direction: "neutral", description: "Depends on the specific situation" },
+          texture: { direction: "neutral", description: "Depends on the specific situation" },
+          authenticity: { direction: "neutral", description: "Depends on the specific situation" },
+        },
+        explanation,
+        proTip: "When in doubt, make small adjustments and taste between each one.",
+        source: { structured: false, ai: true, confidence: "low" },
+      };
+    }
+
+    // Log rescue query
+    const dbResponse: RescueQueryResponse = {
+      fix: response.fix,
+      alternatives: response.alternatives,
+      impact: response.impact,
+      confidence: response.source.confidence,
+      tiersUsed: arbResult.tiersUsed,
+      guardrailApplied: arbResult.guardrailApplied,
+    };
+    logRescueQuery({
+      userInput: message,
+      detectedIntent: { category: intent.category, subcategory: intent.subcategory, confidence: intent.confidence },
+      problemType: problem ?? undefined,
+      hadStructured,
+      response: dbResponse,
+      sessionId: context?.sessionId,
+      recipeId: context?.recipeId,
+    }).catch(() => {});
+
+    trace.addStage("logging", "Logged to rescue_queries + ai_interactions", 0, { hadStructured });
+
+    return {
+      response,
+      trace: trace.finish({ structured: hadStructured, ai: true, mock: false }),
+    };
+  }
+
+  // ─── Standard single-model path (all other rescue problems) ──
   const aiStart = Date.now();
   const aiResult = await ai.rescueAdvice({
     problem: message,
@@ -416,6 +518,108 @@ async function handleModification(
       ai: true,
       confidence: plan.reductionPercent <= 25 ? "high" : "medium",
     },
+  };
+
+  return {
+    response,
+    trace: trace.finish({ structured: true, ai: true, mock: aiResult.wasMock }),
+  };
+}
+
+// ─── Scaling Flow ────────────────────────────────────
+
+async function handleScaling(
+  intent: ReturnType<typeof detectIntent>,
+  message: string,
+  context: AskRequest["context"],
+  trace: ReturnType<typeof createTrace>
+): Promise<{ response: HybridResponse; trace: DebugTrace }> {
+  const recipeId = context?.recipeId || "butter-chicken";
+  const recipe = getRecipeById(recipeId);
+
+  if (!recipe) {
+    const aiResult = await ai.recipeReasoning({ recipeName: "unknown", question: message });
+    return {
+      response: {
+        type: "general",
+        fix: { title: "CookPilot Says", instruction: aiResult.content, urgency: "optional" },
+        alternatives: [], impact: { taste: { direction: "neutral", description: "" }, texture: { direction: "neutral", description: "" }, authenticity: { direction: "neutral", description: "" } },
+        explanation: aiResult.content, proTip: "", source: { structured: false, ai: true, confidence: "low" },
+      },
+      trace: trace.finish({ structured: false, ai: true, mock: aiResult.wasMock }),
+    };
+  }
+
+  // Extract target servings from intent entities or message
+  let targetServings = recipe.servings;
+  const servingsMatch = message.match(/(\d+)\s*(?:people|servings|portions)/i);
+  const multiplierMatch = message.match(/\b(double|triple|halve|half)\b/i);
+
+  if (intent.entities.targetServings) {
+    targetServings = parseInt(intent.entities.targetServings, 10);
+  } else if (servingsMatch) {
+    targetServings = parseInt(servingsMatch[1], 10);
+  } else if (multiplierMatch) {
+    const word = multiplierMatch[1].toLowerCase();
+    if (word === "double") targetServings = recipe.servings * 2;
+    else if (word === "triple") targetServings = recipe.servings * 3;
+    else if (word === "halve" || word === "half") targetServings = Math.max(1, Math.round(recipe.servings / 2));
+  }
+
+  // Run transformation engine
+  const engineStart = Date.now();
+  const result = transformRecipe(recipe.ingredients, recipe.servings, recipe.calories, {
+    targetServings,
+  });
+  trace.addStage("engine", `Scale: ${recipe.servings} → ${targetServings} servings`, Date.now() - engineStart, {
+    structured_scaling_used: true,
+    originalServings: recipe.servings,
+    targetServings,
+    warningsCount: result.warnings.length,
+  });
+
+  // AI explanation
+  const aiStart = Date.now();
+  const aiResult = await ai.recipeReasoning({
+    recipeName: recipe.title,
+    question: `I'm scaling this recipe from ${recipe.servings} to ${targetServings} servings. What should I watch out for?`,
+    cuisine: recipe.cuisine,
+  });
+  trace.addStage("ai-enrichment", "Task: scaling advice", Date.now() - aiStart, {
+    model: aiResult.model, latencyMs: aiResult.latencyMs, wasMock: aiResult.wasMock,
+    ai_enrichment_used: true,
+  });
+
+  logAiInteraction({
+    taskType: "recipe-reasoning", model: aiResult.model,
+    inputSummary: `scale ${recipe.title}: ${recipe.servings}→${targetServings}`,
+    latencyMs: aiResult.latencyMs, wasMock: aiResult.wasMock,
+  }).catch(() => {});
+
+  // Build scaled ingredients summary
+  const scaledSummary = result.ingredients
+    .slice(0, 5)
+    .map((i) => `${i.name}: ${i.amount} ${i.unit}`)
+    .join(", ");
+
+  const response: HybridResponse = {
+    type: "explanation",
+    fix: {
+      title: `Scaled: ${recipe.servings} → ${targetServings} servings`,
+      instruction: `Recipe scaled to ${targetServings} servings. Key ingredients: ${scaledSummary}. Calories per serving: ${result.calories}.${result.warnings.length > 0 ? ` Note: ${result.warnings[0].message}` : ""}`,
+      urgency: "when-ready",
+    },
+    alternatives: [],
+    impact: {
+      taste: { direction: "neutral", description: "Taste unchanged — only portion size adjusted" },
+      texture: { direction: "neutral", description: "Texture unchanged" },
+      authenticity: { direction: "neutral", description: "Fully authentic — scaling preserves the recipe" },
+    },
+    explanation: aiResult.content,
+    proTip: targetServings > recipe.servings * 3
+      ? "For very large batches, consider cooking in multiple pots for even heat distribution."
+      : `Scaled from ${recipe.servings} to ${targetServings} servings. Spices are scaled conservatively — taste and adjust.`,
+    source: { structured: true, ai: true, confidence: "high" },
   };
 
   return {

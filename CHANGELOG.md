@@ -1,5 +1,37 @@
 # CookPilot — Build & Release Log
 
+## [1.3.0] — 2026-03-30 — Audit P3: All 5 Remaining Items Complete
+
+### P3.1 — DB-Backed Recipe API Routes
+- `GET /api/recipes` — lists all published recipes from Neon with joined ingredients + steps. Supports `?q=` search. Shapes to match frontend Recipe type.
+- `GET /api/recipes/[slug]` — single recipe by slug with full details. 404 if not found.
+- First step toward full mock→DB migration (pages can now fetch from API instead of mock-data.ts)
+
+### P3.2 — AI Recipe Image Generation
+- `POST /api/recipes/generate-image` — generates food photo via `google/gemini-3.1-flash-image-preview` through AI Gateway, uploads to Vercel Blob, updates `image_url` in Neon
+- `scripts/generate-images.ts` — batch script to generate images for all recipes missing them
+- Run: `npx dotenv -e .env.local -- npx tsx scripts/generate-images.ts` (requires dev server)
+
+### P3.3 — Cooking History & Stats
+- `GET /api/sessions/history` — returns completed sessions with recipe titles, duration, aggregate stats (totalCompleted, totalCookingMinutes, mostCookedRecipe)
+- `getCompletedSessions()`, `getCookingStats()` added to queries.ts
+
+### P3.4 — Multi-Model Arbitration (Selective)
+- `handleRescue` in `/api/ask` now calls `arbitrate()` for "slightly-burned" scenarios only (high-stakes, irreversible)
+- Runs primary → validator → arbitrator → guardrail pipeline with full trace metadata
+- All other rescue problems unchanged (single-model)
+
+### P3.5 — Scaling Intent Handler
+- `handleScaling()` added to `/api/ask` — handles "double the recipe", "adjust for 8 people", "halve this"
+- Extracts target servings from natural language (number, multiplier word, or entity)
+- Runs `transformRecipe()` engine, then AI explains what to watch for when scaling
+- Response shows scaled ingredients summary, calories per serving, scaling warnings
+
+### Infrastructure
+- 17 API routes total (3 new: `/api/recipes`, `/api/recipes/[slug]`, `/api/sessions/history`, `/api/recipes/generate-image`)
+- 2 new query functions in queries.ts
+- All built with 4 parallel agents + lead handling P3.5
+
 ## [1.2.0] — 2026-03-30 — Audit Fixes: 8 Disconnections Resolved
 
 ### Priority 1 — Critical Fixes

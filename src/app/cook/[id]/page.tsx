@@ -24,21 +24,42 @@ export default function CookModePage() {
   const [direction, setDirection] = useState(0);
   const sessionIdRef = useRef<string | null>(null);
 
-  // Start or resume a cooking session on mount
+  // Resume existing session or start a new one
   useEffect(() => {
     if (!recipe) return;
-    fetch("/api/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "start",
-        recipeId: recipe.id,
-        totalSteps: recipe.steps.length,
-        servings: recipe.servings,
-      }),
-    })
+
+    // Check for existing active session first
+    fetch("/api/sessions/active")
       .then((r) => r.json())
-      .then((data) => { sessionIdRef.current = data.sessionId; })
+      .then((data) => {
+        const existing = (data.sessions ?? []).find(
+          (s: { recipeId: string }) => s.recipeId === recipe.id
+        );
+        if (existing) {
+          // Resume: restore step and session ID
+          sessionIdRef.current = existing.id;
+          const resumeStep = Math.max(0, (existing.currentStep ?? 1) - 1); // DB is 1-indexed
+          setCurrentStep(resumeStep);
+          // Mark prior steps as completed
+          const completed = new Set<number>();
+          for (let i = 0; i < resumeStep; i++) completed.add(i);
+          setCompletedSteps(completed);
+          return;
+        }
+        // No existing session — start a new one
+        return fetch("/api/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "start",
+            recipeId: recipe.id,
+            totalSteps: recipe.steps.length,
+            servings: recipe.servings,
+          }),
+        })
+          .then((r) => r.json())
+          .then((d) => { sessionIdRef.current = d.sessionId; });
+      })
       .catch(() => {});
   }, [recipe]);
 

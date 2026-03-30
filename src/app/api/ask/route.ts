@@ -3,6 +3,8 @@ import { detectIntent, intentToRescueProblem } from "@/lib/hybrid/intent";
 import { getRescue } from "@/lib/engines/rescue";
 import { findSubstitutesFor } from "@/lib/engines/substitution";
 import { planCalorieReduction, estimateCalories } from "@/lib/engines/transformation";
+import { applyEdit } from "@/lib/engines/recipe-edit";
+import type { EditAction } from "@/lib/engines/recipe-edit/types";
 import { getRecipeById } from "@/data/mock-data";
 import { ai } from "@/lib/ai";
 import { logRescueQuery, logAiInteraction } from "@/lib/db/queries";
@@ -54,6 +56,9 @@ export async function POST(req: Request) {
       break;
     case "modification":
       ({ response, trace: debugTrace } = await handleModification(intent, message, context, trace));
+      break;
+    case "edit":
+      ({ response, trace: debugTrace } = await handleEdit(intent, message, context, trace));
       break;
     default:
       ({ response, trace: debugTrace } = await handleGeneral(message, context, trace));
@@ -410,6 +415,181 @@ async function handleModification(
       structured: true,
       ai: true,
       confidence: plan.reductionPercent <= 25 ? "high" : "medium",
+    },
+  };
+
+  return {
+    response,
+    trace: trace.finish({ structured: true, ai: true, mock: aiResult.wasMock }),
+  };
+}
+
+// ─── Edit Flow ─────────────────────────────────────
+
+async function handleEdit(
+  intent: ReturnType<typeof detectIntent>,
+  message: string,
+  context: AskRequest["context"],
+  trace: ReturnType<typeof createTrace>
+): Promise<{ response: HybridResponse; trace: DebugTrace }> {
+  // Handle "save" subcategory — no edit engine needed
+  if (intent.subcategory === "save") {
+    const response: HybridResponse = {
+      type: "general",
+      fix: {
+        title: "Save Your Recipe",
+        instruction: "To save this recipe, use the save variant dialog from the recipe page. You can save your customised version there.",
+        urgency: "optional",
+      },
+      alternatives: [],
+      impact: {
+        taste: { direction: "neutral", description: "" },
+        texture: { direction: "neutral", description: "" },
+        authenticity: { direction: "neutral", description: "" },
+      },
+      explanation: "Use the save variant dialog to store your edited recipe.",
+      proTip: "",
+      source: { structured: false, ai: false, confidence: "high" },
+    };
+    return { response, trace: trace.finish({ structured: false, ai: false, mock: false }) };
+  }
+
+  // Get recipe from context or default to butter chicken
+  const recipeId = context?.recipeId || "butter-chicken";
+  const recipe = getRecipeById(recipeId);
+
+  if (!recipe) {
+    const aiResult = await ai.recipeReasoning({ recipeName: "unknown", question: message });
+    return {
+      response: {
+        type: "general",
+        fix: { title: "CookPilot Says", instruction: aiResult.content, urgency: "optional" },
+        alternatives: [],
+        impact: {
+          taste: { direction: "neutral", description: "" },
+          texture: { direction: "neutral", description: "" },
+          authenticity: { direction: "neutral", description: "" },
+        },
+        explanation: aiResult.content,
+        proTip: "",
+        source: { structured: false, ai: true, confidence: "low" },
+      },
+      trace: trace.finish({ structured: false, ai: true, mock: aiResult.wasMock }),
+    };
+  }
+
+  // Extract entities
+  const ingredientName = intent.entities.ingredient || "";
+  const replacementName = intent.entities.replacement || "";
+
+  // Build EditAction from subcategory
+  let action: EditAction;
+
+  switch (intent.subcategory) {
+    case "remove":
+      action = { type: "remove", ingredientName };
+      break;
+    case "replace":
+      action = {
+        type: "replace",
+        ingredientName,
+        replacement: {
+          name: replacementName,
+          amount: 0,
+          unit: "to taste",
+          category: "other" as const,
+        },
+      };
+      break;
+    case "add":
+      action = {
+        type: "add",
+        ingredientName,
+        newIngredient: {
+          name: ingredientName,
+          amount: 1,
+          unit: "to taste",
+          category: "other" as const,
+        },
+      };
+      break;
+    default:
+      action = { type: "remove", ingredientName };
+      break;
+  }
+
+  // Apply the structured edit
+  const engineStart = Date.now();
+  const editResult = applyEdit(recipe.ingredients, action);
+  trace.addStage("engine", `Edit: ${action.type} ${ingredientName}`, Date.now() - engineStart, {
+    structured_edit_used: true,
+    editType: action.type,
+    ingredient: ingredientName,
+    success: editResult.success,
+    warningsCount: editResult.warnings.length,
+  });
+
+  // AI enrichment — explain the impact
+  const aiStart = Date.now();
+  const aiResult = await ai.recipeReasoning({
+    recipeName: recipe.title,
+    question: editResult.impact.summary,
+    cuisine: recipe.cuisine,
+  });
+  trace.addStage("ai-enrichment", "Task: recipe-reasoning (edit impact)", Date.now() - aiStart, {
+    model: aiResult.model,
+    latencyMs: aiResult.latencyMs,
+    wasMock: aiResult.wasMock,
+    responseLength: aiResult.content.length,
+    ai_enrichment_used: true,
+    ai_allowed_to_change_edit: false,
+  });
+
+  if (aiResult.wasMock) trace.addFlag("ai-mock-response");
+
+  logAiInteraction({
+    taskType: "recipe-reasoning",
+    model: aiResult.model,
+    inputSummary: `edit/${intent.subcategory}: ${ingredientName} in ${recipe.title}`,
+    inputContext: { recipeId, editType: action.type, ingredient: ingredientName },
+    latencyMs: aiResult.latencyMs,
+    wasMock: aiResult.wasMock,
+  }).catch(() => {});
+
+  // Map impact levels to HybridResponse directions
+  const directionMap = (level: "none" | "minor" | "significant") =>
+    level === "significant" ? "different" as const : "neutral" as const;
+
+  const response: HybridResponse = {
+    type: "explanation",
+    fix: {
+      title: `Edit: ${action.type} ${ingredientName}`,
+      instruction: editResult.success
+        ? editResult.impact.summary
+        : `Could not apply edit: ${editResult.warnings.join("; ")}`,
+      urgency: "when-ready",
+    },
+    alternatives: [],
+    impact: {
+      taste: {
+        direction: directionMap(editResult.impact.tasteChange),
+        description: editResult.impact.tasteChange === "none" ? "No taste change expected" : `Taste impact: ${editResult.impact.tasteChange}`,
+      },
+      texture: {
+        direction: directionMap(editResult.impact.textureChange),
+        description: editResult.impact.textureChange === "none" ? "No texture change expected" : `Texture impact: ${editResult.impact.textureChange}`,
+      },
+      authenticity: {
+        direction: directionMap(editResult.impact.authenticityChange),
+        description: editResult.impact.authenticityChange === "none" ? "Authenticity preserved" : `Authenticity impact: ${editResult.impact.authenticityChange}`,
+      },
+    },
+    explanation: aiResult.content,
+    proTip: editResult.warnings.length > 0 ? editResult.warnings[0] : "",
+    source: {
+      structured: true,
+      ai: true,
+      confidence: editResult.success ? "high" : "medium",
     },
   };
 

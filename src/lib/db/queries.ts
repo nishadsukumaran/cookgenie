@@ -276,3 +276,54 @@ export async function upsertPreferences(
     .returning({ id: schema.userPreferences.id });
   return row.id;
 }
+
+// ─── Saved Recipes ─────────────────────────────────
+
+export async function saveRecipe(userId: string, recipeId: string) {
+  const db = getDb();
+  await db
+    .insert(schema.savedRecipes)
+    .values({ userId, recipeId })
+    .onConflictDoNothing();
+}
+
+export async function unsaveRecipe(userId: string, recipeId: string) {
+  const db = getDb();
+  await db
+    .delete(schema.savedRecipes)
+    .where(
+      and(
+        eq(schema.savedRecipes.userId, userId),
+        eq(schema.savedRecipes.recipeId, recipeId)
+      )
+    );
+}
+
+export async function getSavedRecipes(userId: string) {
+  const db = getDb();
+  return db
+    .select({
+      savedAt: schema.savedRecipes.savedAt,
+      recipeId: schema.recipes.id,
+      slug: schema.recipes.slug,
+      title: schema.recipes.title,
+      description: schema.recipes.description,
+      imageUrl: schema.recipes.imageUrl,
+      cuisine: schema.recipes.cuisine,
+      cookingTime: schema.recipes.cookingTime,
+      prepTime: schema.recipes.prepTime,
+      difficulty: schema.recipes.difficulty,
+      rating: schema.recipes.rating,
+      servings: schema.recipes.servings,
+      calories: schema.recipes.calories,
+      tags: schema.recipes.tags,
+      aiSummary: schema.recipes.aiSummary,
+    })
+    .from(schema.savedRecipes)
+    .innerJoin(
+      schema.recipes,
+      eq(schema.savedRecipes.recipeId, schema.recipes.id)
+    )
+    .where(eq(schema.savedRecipes.userId, userId))
+    .orderBy(desc(schema.savedRecipes.savedAt));
+}

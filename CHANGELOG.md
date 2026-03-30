@@ -1,5 +1,44 @@
 # CookPilot — Build & Release Log
 
+## [1.2.0] — 2026-03-30 — Audit Fixes: 8 Disconnections Resolved
+
+### Priority 1 — Critical Fixes
+- **P1.1 Cook mode resume** — now loads existing session on mount instead of always creating a new one. Fetches `/api/sessions/active`, finds session for current recipe, restores `currentStep` and marks prior steps as completed. Resume from Home actually works.
+- **P1.2 Ask page auto-send** — reads `?message=` URL parameter on mount, auto-sends if present. Home "Try asking" prompts and Power buttons now work end-to-end (navigate → auto-send → see response). Wrapped in `Suspense` for `useSearchParams`.
+- **P1.3 Edit intent wired** — added `case "edit":` to `/api/ask` route handler. Chat commands like "remove cream", "replace butter with olive oil", "add mushrooms" now call the recipe-edit engine with structured EditActions + AI impact explanation. Trace shows `structured_edit_used: true`.
+- **P1.4 Saved recipes real** — `POST/GET /api/saved` route, `saveRecipe()` / `unsaveRecipe()` / `getSavedRecipes()` DB queries, Saved page fetches from Neon instead of hardcoded mock IDs.
+
+### Priority 2 — Dead Code Connected
+- **P2.1 Ingredient editing UI wired** — `IngredientActionMenu` (Replace/Remove/Explain) now renders on each ingredient row in recipe detail. `AddIngredientSheet` renders below the ingredient list. Both call `/api/recipe-edit`.
+- **P2.2 RecipeOwnerBadge wired** — shows "Original Recipe" badge in recipe detail header alongside tags.
+- **P2.3 Learning layer active** — substitution API now calls `adjustConfidence()` + `derivePersonalizationBias()` from the learning engine. Trace stage shows `baseScore`, `adjustedScore`, `feedbackMod`, `prefMod`. Wrapped in try/catch.
+- **P2.4 Profile page real data** — fetches from `/api/preferences`, `/api/sessions/active`, `/api/saved`. Shows real dietary/cuisine badges, active session count, saved recipe count. Skeleton loading states. Empty states when no data.
+
+### Dormant code eliminated
+Previously built but unused components now wired: `IngredientActionMenu`, `AddIngredientSheet`, `RecipeOwnerBadge`, learning layer (`adjustConfidence`, `derivePersonalizationBias`). The `SubstitutionSheet` wrapper on ingredient rows replaced with `IngredientActionMenu` for direct edit actions.
+
+### Built with parallel agents
+- Agent A: Edit intent handler (ask/route.ts) | Agent B: Saved recipes (queries + API + UI) | Agent C: Learning layer (substitution/route.ts) | Agent D: Profile page | Lead: Cook mode resume, ask auto-send, ingredient UI wiring, owner badge
+
+## [1.1.1] — 2026-03-30 — Saved Recipes (End-to-End)
+
+### Added — Saved Recipes backed by Neon
+- **`saveRecipe()` / `unsaveRecipe()` / `getSavedRecipes()`** in `src/lib/db/queries.ts`
+  - `saveRecipe` — insert into `saved_recipes`, onConflict do nothing
+  - `unsaveRecipe` — delete by userId + recipeId
+  - `getSavedRecipes` — inner join with `recipes` table, returns title/slug/cuisine/rating/etc, ordered by savedAt desc
+- **`GET /api/saved`** — returns `{ savedRecipeIds, savedRecipes }` from Neon
+  - `savedRecipeIds` for quick client-side lookup, `savedRecipes` shaped to match `Recipe` type
+- **`POST /api/saved`** — `{ recipeId, action: "save" | "unsave" }` toggle
+  - Validates body, calls `saveRecipe` or `unsaveRecipe`, returns `{ ok: true }`
+- **Saved page (`/saved`) now fetches from API** instead of hardcoded mock IDs
+  - Loading spinner while fetching (matches My Versions tab pattern)
+  - Empty state with "Browse recipes" CTA preserved
+  - My Versions tab unchanged
+
+### Removed
+- Mock `savedRecipeIds` import removed from Saved page
+
 ## [1.1.0] — 2026-03-30 — Online Recipe Search (Real)
 
 ### Added — Online Recipe Search (replaces "coming soon" placeholder)

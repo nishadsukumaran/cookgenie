@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { findSubstitutesFor } from "@/lib/engines/substitution";
 import { ai } from "@/lib/ai";
-import { logAiInteraction } from "@/lib/db/queries";
+import { logAiInteraction, getPreferences } from "@/lib/db/queries";
 import { createTrace, isDev } from "@/lib/debug/types";
+import { adjustConfidence, derivePersonalizationBias, personalizationContext } from "@/lib/engines/learning";
 
 interface SubstitutionRequest {
   ingredient: string;
@@ -76,6 +77,21 @@ export async function POST(req: Request) {
       latencyMs: aiResult.latencyMs,
       wasMock: aiResult.wasMock,
     }).catch(() => {});
+  }
+
+  // ─── Learning Layer ──────────────────────────────
+  try {
+    const prefs = await getPreferences("dev-user").catch(() => null);
+    const bias = derivePersonalizationBias(prefs);
+    const adjusted = await adjustConfidence(result.best?.score ?? 50, "substitution", bias);
+    trace.addStage("learning", "Confidence adjustment + personalization", 0, {
+      baseScore: result.best?.score ?? 0,
+      adjustedScore: adjusted.adjustedScore,
+      feedbackMod: adjusted.feedbackModifier,
+      prefMod: adjusted.preferenceModifier,
+    });
+  } catch {
+    // Learning layer failure must not break the response
   }
 
   // ─── Build Response ───────────────────────────────

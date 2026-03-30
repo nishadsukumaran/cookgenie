@@ -36,6 +36,9 @@ import { ConfidenceRiskBadge } from "@/components/recipe/confidence-risk-badge";
 import { BeforeAfterCard } from "@/components/recipe/before-after-card";
 import { QuickActions } from "@/components/recipe/quick-actions";
 import { SaveVariantDialog } from "@/components/recipe/save-variant-dialog";
+import { IngredientActionMenu } from "@/components/recipe/ingredient-action-menu";
+import { AddIngredientSheet } from "@/components/recipe/add-ingredient-sheet";
+import { RecipeOwnerBadge } from "@/components/recipe/recipe-owner-badge";
 import { getRecipeById } from "@/data/mock-data";
 import { transformRecipe } from "@/lib/engines/transformation";
 import { computeTrustMetrics } from "@/lib/engines/transformation/trust";
@@ -156,7 +159,8 @@ export default function RecipeDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mt-5"
         >
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <RecipeOwnerBadge type="original" />
             {recipe.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="text-xs">
                 {tag}
@@ -309,23 +313,23 @@ export default function RecipeDetailPage() {
           </div>
           <div className="mt-3 rounded-2xl border border-border bg-card px-4">
             {transformation.ingredients.map((ingredient, i) => (
-              <SubstitutionSheet
-                key={i}
-                ingredientName={ingredient.name}
-                amount={ingredient.amount}
-                unit={ingredient.unit}
-                recipeName={recipe.title}
-                cuisine={recipe.cuisine}
-              >
-                <div>
+              <div key={i} className="flex items-center">
+                <div className="flex-1">
                   <IngredientRow
                     ingredient={ingredient}
                     isModified={isModified}
                     onSubstitute={() => {}}
                   />
                 </div>
-              </SubstitutionSheet>
+                <IngredientActionMenu
+                  ingredientName={ingredient.name}
+                  recipeId={recipe.id}
+                />
+              </div>
             ))}
+          </div>
+          <div className="mt-3">
+            <AddIngredientSheet recipeId={recipe.id} />
           </div>
         </motion.section>
 

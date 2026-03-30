@@ -8,7 +8,7 @@ import { RecipeCard } from "@/components/recipe/recipe-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { recipes, savedRecipeIds } from "@/data/mock-data";
+import type { Recipe } from "@/data/mock-data";
 
 interface SavedVariant {
   id: string;
@@ -36,10 +36,19 @@ const fadeUp = {
 
 export default function SavedPage() {
   const [tab, setTab] = useState<"recipes" | "versions">("recipes");
+  const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+  const [loadingRecipes, setLoadingRecipes] = useState(true);
   const [variants, setVariants] = useState<SavedVariant[]>([]);
   const [loadingVariants, setLoadingVariants] = useState(false);
 
-  const savedRecipes = recipes.filter((r) => savedRecipeIds.includes(r.id));
+  useEffect(() => {
+    setLoadingRecipes(true);
+    fetch("/api/saved")
+      .then((r) => r.json())
+      .then((data) => setSavedRecipes(data.savedRecipes ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingRecipes(false));
+  }, []);
 
   useEffect(() => {
     if (tab === "versions" && variants.length === 0) {
@@ -88,7 +97,11 @@ export default function SavedPage() {
         {/* Saved Recipes Tab */}
         {tab === "recipes" && (
           <div className="mt-4">
-            {savedRecipes.length > 0 ? (
+            {loadingRecipes ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : savedRecipes.length > 0 ? (
               <motion.div
                 variants={stagger}
                 initial="hidden"

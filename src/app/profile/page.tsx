@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ChefHat,
@@ -8,29 +9,194 @@ import {
   Heart,
   Settings,
   ChevronRight,
+  Flame,
+  Ruler,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AppHeader } from "@/components/layout/app-header";
 
-const dietaryPreferences = ["No Peanuts", "Low Sodium"];
-const cuisinePreferences = ["Indian", "Middle Eastern", "Mediterranean"];
+interface UserPreferences {
+  spicePreference: string | null;
+  dietary: string[] | null;
+  cuisines: string[] | null;
+  calorieGoal: number | null;
+  authenticityPreference: string | null;
+  unitSystem: string | null;
+}
 
-const stats = [
-  { label: "Recipes Cooked", value: "12", icon: BookOpen },
-  { label: "Hours Cooking", value: "8.5", icon: Clock },
-  { label: "Favorites", value: "3", icon: Heart },
-];
+interface ProfileData {
+  preferences: UserPreferences | null;
+  activeSessionCount: number;
+  savedCount: number;
+}
 
-const menuItems = [
-  { label: "Dietary Preferences", icon: Heart, badge: "2 set" },
-  { label: "Cuisine Preferences", icon: ChefHat, badge: "3 cuisines" },
-  { label: "Cooking History", icon: Clock },
-  { label: "App Settings", icon: Settings },
-];
+function formatSpice(value: string | null | undefined): string {
+  if (!value) return "Medium";
+  const map: Record<string, string> = {
+    mild: "Mild",
+    medium: "Medium",
+    hot: "Hot",
+    very_hot: "Very Hot",
+  };
+  return map[value] ?? value;
+}
+
+function formatUnit(value: string | null | undefined): string {
+  if (!value) return "Metric";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatDietaryLabel(value: string): string {
+  return value
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function formatCuisineLabel(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function StatsGridSkeleton() {
+  return (
+    <div className="mt-6 grid grid-cols-3 gap-3">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="flex flex-col items-center rounded-2xl border border-border bg-card p-4"
+        >
+          <Skeleton className="h-5 w-5 rounded-full" />
+          <Skeleton className="mt-2 h-6 w-8" />
+          <Skeleton className="mt-1 h-3 w-16" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PreferencesSkeleton() {
+  return (
+    <>
+      <div className="mt-6">
+        <Skeleton className="h-4 w-32" />
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+      </div>
+      <div className="mt-4">
+        <Skeleton className="h-4 w-32" />
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Skeleton className="h-6 w-16 rounded-full" />
+          <Skeleton className="h-6 w-28 rounded-full" />
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function ProfilePage() {
+  const [data, setData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProfileData() {
+      try {
+        const [prefsRes, sessionsRes, savedRes] = await Promise.all([
+          fetch("/api/preferences"),
+          fetch("/api/sessions/active"),
+          fetch("/api/saved"),
+        ]);
+
+        const prefsJson = await prefsRes.json();
+        const sessionsJson = await sessionsRes.json();
+        const savedJson = await savedRes.json();
+
+        setData({
+          preferences: prefsJson.preferences ?? null,
+          activeSessionCount: sessionsJson.sessions?.length ?? 0,
+          savedCount: savedJson.savedRecipeIds?.length ?? 0,
+        });
+      } catch {
+        // Graceful degradation — show empty state
+        setData({
+          preferences: null,
+          activeSessionCount: 0,
+          savedCount: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProfileData();
+  }, []);
+
+  const prefs = data?.preferences;
+  const dietary = prefs?.dietary ?? [];
+  const cuisines = prefs?.cuisines ?? [];
+
+  const stats = [
+    {
+      label: "Active Sessions",
+      value: loading ? "—" : String(data?.activeSessionCount ?? 0),
+      icon: BookOpen,
+    },
+    {
+      label: "Hours Cooking",
+      value: "—",
+      icon: Clock,
+    },
+    {
+      label: "Favorites",
+      value: loading ? "—" : String(data?.savedCount ?? 0),
+      icon: Heart,
+    },
+  ];
+
+  const menuItems = [
+    {
+      label: "Dietary Preferences",
+      icon: Heart,
+      badge: loading
+        ? "…"
+        : dietary.length > 0
+          ? `${dietary.length} set`
+          : "None",
+    },
+    {
+      label: "Cuisine Preferences",
+      icon: ChefHat,
+      badge: loading
+        ? "…"
+        : cuisines.length > 0
+          ? `${cuisines.length} cuisine${cuisines.length !== 1 ? "s" : ""}`
+          : "None",
+    },
+    {
+      label: "Spice Level",
+      icon: Flame,
+      badge: loading ? "…" : formatSpice(prefs?.spicePreference),
+    },
+    {
+      label: "Unit System",
+      icon: Ruler,
+      badge: loading ? "…" : formatUnit(prefs?.unitSystem),
+    },
+    {
+      label: "Cooking History",
+      icon: Clock,
+    },
+    {
+      label: "App Settings",
+      icon: Settings,
+    },
+  ];
+
   return (
     <div className="min-h-screen">
       <AppHeader title="Profile" />
@@ -56,64 +222,94 @@ export default function ProfilePage() {
         </motion.div>
 
         {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="mt-6 grid grid-cols-3 gap-3"
-        >
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="flex flex-col items-center rounded-2xl border border-border bg-card p-4"
-            >
-              <stat.icon className="h-5 w-5 text-primary" />
-              <span className="mt-2 text-lg font-bold tabular-nums">
-                {stat.value}
-              </span>
-              <span className="mt-0.5 text-center text-[11px] text-muted-foreground">
-                {stat.label}
-              </span>
-            </div>
-          ))}
-        </motion.div>
+        {loading ? (
+          <StatsGridSkeleton />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="mt-6 grid grid-cols-3 gap-3"
+          >
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="flex flex-col items-center rounded-2xl border border-border bg-card p-4"
+              >
+                <stat.icon className="h-5 w-5 text-primary" />
+                <span className="mt-2 text-lg font-bold tabular-nums">
+                  {stat.value}
+                </span>
+                <span className="mt-0.5 text-center text-[11px] text-muted-foreground">
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Preferences */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mt-6"
-        >
-          <h3 className="text-sm font-semibold text-muted-foreground">
-            Dietary Preferences
-          </h3>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {dietaryPreferences.map((pref) => (
-              <Badge key={pref} variant="secondary" className="rounded-full">
-                {pref}
-              </Badge>
-            ))}
-          </div>
-        </motion.div>
+        {loading ? (
+          <PreferencesSkeleton />
+        ) : (
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mt-6"
+            >
+              <h3 className="text-sm font-semibold text-muted-foreground">
+                Dietary Preferences
+              </h3>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {dietary.length > 0 ? (
+                  dietary.map((pref) => (
+                    <Badge
+                      key={pref}
+                      variant="secondary"
+                      className="rounded-full"
+                    >
+                      {formatDietaryLabel(pref)}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    No dietary preferences set
+                  </span>
+                )}
+              </div>
+            </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mt-4"
-        >
-          <h3 className="text-sm font-semibold text-muted-foreground">
-            Favorite Cuisines
-          </h3>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {cuisinePreferences.map((cuisine) => (
-              <Badge key={cuisine} variant="outline" className="rounded-full">
-                {cuisine}
-              </Badge>
-            ))}
-          </div>
-        </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="mt-4"
+            >
+              <h3 className="text-sm font-semibold text-muted-foreground">
+                Favorite Cuisines
+              </h3>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {cuisines.length > 0 ? (
+                  cuisines.map((cuisine) => (
+                    <Badge
+                      key={cuisine}
+                      variant="outline"
+                      className="rounded-full"
+                    >
+                      {formatCuisineLabel(cuisine)}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    No cuisine preferences set
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
 
         <Separator className="my-6" />
 

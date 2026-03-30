@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Send, ChefHat, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,11 +36,13 @@ function getFollowUps(response: HybridResponse): string[] {
   }
 }
 
-export default function AskPage() {
+function AskPageContent() {
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoSentRef = useRef(false);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -47,6 +50,15 @@ export default function AskPage() {
       behavior: "smooth",
     });
   }, [messages]);
+
+  // Auto-send message from URL params (e.g., /ask?message=I added too much salt)
+  useEffect(() => {
+    const msg = searchParams.get("message");
+    if (msg && !autoSentRef.current && messages.length === 0) {
+      autoSentRef.current = true;
+      sendMessage(msg);
+    }
+  }, [searchParams, messages.length]);
 
   async function sendMessage(text: string) {
     if (!text.trim() || isTyping) return;
@@ -238,5 +250,13 @@ export default function AskPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function AskPage() {
+  return (
+    <Suspense>
+      <AskPageContent />
+    </Suspense>
   );
 }

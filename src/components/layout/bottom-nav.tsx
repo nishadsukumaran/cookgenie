@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/search", label: "Discover", icon: Search },
-  { href: "/ask", label: "CookPilot", icon: MessageCircle },
+  { href: "/ask", label: "CookGenie", icon: MessageCircle },
   { href: "/saved", label: "Saved", icon: Bookmark },
   { href: "/profile", label: "Profile", icon: ChefHat },
 ];

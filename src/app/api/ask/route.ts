@@ -155,7 +155,7 @@ async function handleRescue(
     } else {
       response = {
         type: "rescue",
-        fix: { title: "CookPilot's Advice", instruction: explanation, urgency: "when-ready" },
+        fix: { title: "CookGenie's Advice", instruction: explanation, urgency: "when-ready" },
         alternatives: [],
         impact: {
           taste: { direction: "neutral", description: "Depends on the specific situation" },
@@ -261,7 +261,7 @@ async function handleRescue(
   } else {
     response = {
       type: "rescue",
-      fix: { title: "CookPilot's Advice", instruction: aiResult.content, urgency: "when-ready" },
+      fix: { title: "CookGenie's Advice", instruction: aiResult.content, urgency: "when-ready" },
       alternatives: [],
       impact: {
         taste: { direction: "neutral", description: "Depends on the specific situation" },
@@ -375,12 +375,12 @@ async function handleSubstitution(
     const aiResult = await ai.recipeReasoning({ recipeName: context?.recipeName || "the dish", question: message, cuisine: context?.cuisine });
     response = {
       type: "substitution",
-      fix: { title: "CookPilot's Suggestion", instruction: aiResult.content, urgency: "when-ready" },
+      fix: { title: "CookGenie's Suggestion", instruction: aiResult.content, urgency: "when-ready" },
       alternatives: [],
       impact: {
-        taste: { direction: "neutral", description: "Ask CookPilot for specifics" },
-        texture: { direction: "neutral", description: "Ask CookPilot for specifics" },
-        authenticity: { direction: "neutral", description: "Ask CookPilot for specifics" },
+        taste: { direction: "neutral", description: "Ask CookGenie for specifics" },
+        texture: { direction: "neutral", description: "Ask CookGenie for specifics" },
+        authenticity: { direction: "neutral", description: "Ask CookGenie for specifics" },
       },
       explanation: aiResult.content,
       proTip: "When substituting, add at the same cooking stage as the original.",
@@ -412,7 +412,7 @@ async function handleModification(
     return {
       response: {
         type: "general",
-        fix: { title: "CookPilot Says", instruction: aiResult.content, urgency: "optional" },
+        fix: { title: "CookGenie Says", instruction: aiResult.content, urgency: "optional" },
         alternatives: [], impact: { taste: { direction: "neutral", description: "" }, texture: { direction: "neutral", description: "" }, authenticity: { direction: "neutral", description: "" } },
         explanation: aiResult.content, proTip: "", source: { structured: false, ai: true, confidence: "low" },
       },
@@ -542,7 +542,7 @@ async function handleScaling(
     return {
       response: {
         type: "general",
-        fix: { title: "CookPilot Says", instruction: aiResult.content, urgency: "optional" },
+        fix: { title: "CookGenie Says", instruction: aiResult.content, urgency: "optional" },
         alternatives: [], impact: { taste: { direction: "neutral", description: "" }, texture: { direction: "neutral", description: "" }, authenticity: { direction: "neutral", description: "" } },
         explanation: aiResult.content, proTip: "", source: { structured: false, ai: true, confidence: "low" },
       },
@@ -667,7 +667,7 @@ async function handleEdit(
     return {
       response: {
         type: "general",
-        fix: { title: "CookPilot Says", instruction: aiResult.content, urgency: "optional" },
+        fix: { title: "CookGenie Says", instruction: aiResult.content, urgency: "optional" },
         alternatives: [],
         impact: {
           taste: { direction: "neutral", description: "" },
@@ -828,7 +828,7 @@ async function handleGeneral(
 
   const response: HybridResponse = {
     type: "general",
-    fix: { title: "CookPilot Says", instruction: aiResult.content, urgency: "optional" },
+    fix: { title: "CookGenie Says", instruction: aiResult.content, urgency: "optional" },
     alternatives: [],
     impact: { taste: { direction: "neutral", description: "" }, texture: { direction: "neutral", description: "" }, authenticity: { direction: "neutral", description: "" } },
     explanation: aiResult.content, proTip: "",

@@ -1,5 +1,5 @@
 /**
- * Ingredient scaling engine for CookPilot.
+ * Ingredient scaling engine for CookGenie.
  *
  * Handles serving-based scaling with kitchen-friendly rounding
  * and smart handling of non-linear ingredients (spices, leaveners).

@@ -1,5 +1,5 @@
 /**
- * Unit conversion system for CookPilot.
+ * Unit conversion system for CookGenie.
  *
  * Handles metric ↔ imperial, volume ↔ volume, and provides
  * human-friendly rounding for kitchen quantities.

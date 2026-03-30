@@ -1,5 +1,5 @@
 /**
- * Database query helpers for CookPilot.
+ * Database query helpers for CookGenie.
  *
  * Thin wrappers around Drizzle insert/select operations.
  * Each function is self-contained — gets its own db instance.

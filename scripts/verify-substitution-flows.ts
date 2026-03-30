@@ -166,7 +166,7 @@ async function verify(tc: TestCase) {
 
 async function main() {
   console.log("==============================================");
-  console.log("  CookPilot Substitution Flow Verification");
+  console.log("  CookGenie Substitution Flow Verification");
   console.log(`  Target: ${BASE}`);
   console.log("==============================================\n");
 

@@ -21,7 +21,7 @@ function check(condition: boolean, label: string, detail?: string) {
 
 async function main() {
   console.log("==============================================");
-  console.log("  CookPilot Modification Flow Verification");
+  console.log("  CookGenie Modification Flow Verification");
   console.log(`  Target: ${BASE}`);
   console.log("==============================================\n");
 

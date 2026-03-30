@@ -161,7 +161,7 @@ export default function CookModePage() {
         <button
           onClick={() => router.push(`/ask?recipe=${recipe.id}&step=${currentStep + 1}`)}
           className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
-          aria-label="Ask CookPilot for help"
+          aria-label="Ask CookGenie for help"
         >
           <MessageCircle className="h-5 w-5 text-primary" />
         </button>
@@ -283,7 +283,7 @@ export default function CookModePage() {
             className="w-full rounded-2xl text-sm text-primary hover:text-primary"
           >
             <MessageCircle className="mr-2 h-4 w-4" />
-            Need help? Ask CookPilot
+            Need help? Ask CookGenie
           </Button>
         </div>
       </div>

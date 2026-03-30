@@ -1,5 +1,5 @@
 /**
- * Transformation warning system for CookPilot.
+ * Transformation warning system for CookGenie.
  *
  * Detects when recipe modifications may affect cooking outcome,
  * taste, texture, or authenticity. Pure deterministic logic.

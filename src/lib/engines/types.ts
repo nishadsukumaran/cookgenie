@@ -1,5 +1,5 @@
 /**
- * Shared types for CookPilot engines.
+ * Shared types for CookGenie engines.
  *
  * All engines consume and produce these types. UI components
  * should import from here, not from individual engine files.

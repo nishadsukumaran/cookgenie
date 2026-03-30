@@ -113,7 +113,7 @@ function AskPageContent() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <AppHeader title="Ask CookPilot" showBack />
+      <AppHeader title="Ask CookGenie" showBack />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         <div className="mx-auto max-w-lg">

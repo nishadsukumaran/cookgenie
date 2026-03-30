@@ -123,7 +123,7 @@ export function SubstitutionSheet({
                 No substitutions found for {ingredientName}.
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Try asking CookPilot for creative alternatives.
+                Try asking CookGenie for creative alternatives.
               </p>
             </div>
           )}
@@ -145,7 +145,7 @@ export function SubstitutionSheet({
                     <Bot className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <div>
                       <span className="text-xs font-semibold text-primary">
-                        CookPilot explains
+                        CookGenie explains
                       </span>
                       <p className="mt-1 text-xs leading-relaxed text-accent-foreground">
                         {data.aiExplanation}

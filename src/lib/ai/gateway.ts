@@ -1,5 +1,5 @@
 /**
- * AI Gateway configuration for CookPilot.
+ * AI Gateway configuration for CookGenie.
  *
  * Auto-detects mock vs live mode based on VERCEL_OIDC_TOKEN.
  * Uses "provider/model" strings routed through Vercel AI Gateway.

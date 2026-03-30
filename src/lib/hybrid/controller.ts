@@ -196,15 +196,15 @@ async function handleSubstitution(
   return {
     type: "substitution",
     fix: {
-      title: "CookPilot's Suggestion",
+      title: "CookGenie's Suggestion",
       instruction: aiResponse.content,
       urgency: "when-ready",
     },
     alternatives: [],
     impact: {
-      taste: { direction: "neutral", description: "Ask CookPilot for specifics" },
-      texture: { direction: "neutral", description: "Ask CookPilot for specifics" },
-      authenticity: { direction: "neutral", description: "Ask CookPilot for specifics" },
+      taste: { direction: "neutral", description: "Ask CookGenie for specifics" },
+      texture: { direction: "neutral", description: "Ask CookGenie for specifics" },
+      authenticity: { direction: "neutral", description: "Ask CookGenie for specifics" },
     },
     explanation: aiResponse.content,
     proTip: "When substituting, always add the replacement at the same cooking stage as the original.",
@@ -227,7 +227,7 @@ async function handleGeneral(
   return {
     type: "general",
     fix: {
-      title: "CookPilot Says",
+      title: "CookGenie Says",
       instruction: aiResponse.content,
       urgency: "optional",
     },
@@ -259,7 +259,7 @@ function structuredAdviceToHybrid(
   return {
     type: advice.scenario_type === "rescue" ? "rescue" : "general",
     fix: {
-      title: "CookPilot's Advice",
+      title: "CookGenie's Advice",
       instruction: advice.primary_fix.action,
       ingredients: advice.primary_fix.ingredients,
       urgency: advice.primary_fix.urgency === "immediate"

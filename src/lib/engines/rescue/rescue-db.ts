@@ -189,14 +189,14 @@ export const RESCUE_DB: RescueSolution[] = [
     severity: "mild",
     immediateFix: {
       instruction:
-        "Check CookPilot's substitution engine for smart swaps. Many ingredients have excellent alternatives that preserve the dish's character. Tap the swap icon next to any ingredient.",
+        "Check CookGenie's substitution engine for smart swaps. Many ingredients have excellent alternatives that preserve the dish's character. Tap the swap icon next to any ingredient.",
     },
     gradualFix: {
       instruction:
         "If no substitute is available, consider whether the ingredient is essential (core flavor/texture), important (enhances but not required), or optional (garnish/finishing). Essential: better to make a different dish. Important: reduce other bold flavors to compensate. Optional: skip it entirely.",
     },
     preventionTip:
-      "Read the full ingredient list before starting. CookPilot highlights substitutable ingredients — check before you cook. Keep pantry staples stocked.",
+      "Read the full ingredient list before starting. CookGenie highlights substitutable ingredients — check before you cook. Keep pantry staples stocked.",
   },
 ];
 

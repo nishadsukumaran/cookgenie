@@ -27,7 +27,7 @@ async function seed() {
   const sql = neon(url);
   const db = drizzle(sql, { schema });
 
-  console.log("🌱 Seeding CookPilot database...\n");
+  console.log("🌱 Seeding CookGenie database...\n");
 
   // ─── Recipes ──────────────────────────────────────
   for (const recipe of mockRecipes) {

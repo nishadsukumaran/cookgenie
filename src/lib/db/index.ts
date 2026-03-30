@@ -1,5 +1,5 @@
 /**
- * Database connection for CookPilot.
+ * Database connection for CookGenie.
  *
  * Uses Neon serverless driver with Drizzle ORM.
  * Connection is lazy-initialized on first use.

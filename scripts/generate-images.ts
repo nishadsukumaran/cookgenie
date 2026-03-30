@@ -5,7 +5,7 @@
  *   npx dotenv -e .env.local -- npx tsx scripts/generate-images.ts
  *
  * Alternatively, set BASE_URL to target a deployed environment:
- *   BASE_URL=https://cookpilot.vercel.app npx dotenv -e .env.local -- npx tsx scripts/generate-images.ts
+ *   BASE_URL=https://cookgenie.vercel.app npx dotenv -e .env.local -- npx tsx scripts/generate-images.ts
  */
 
 import { neon } from "@neondatabase/serverless";

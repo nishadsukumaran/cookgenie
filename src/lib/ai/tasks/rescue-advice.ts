@@ -14,7 +14,7 @@ interface RescueAdviceInput {
   details?: string;
 }
 
-export const RESCUE_ADVICE_PROMPT = `You are CookPilot, an emergency cooking assistant.
+export const RESCUE_ADVICE_PROMPT = `You are CookGenie, an emergency cooking assistant.
 The user has a cooking problem RIGHT NOW. Be calm, clear, and actionable.
 1. Acknowledge the problem quickly (1 sentence)
 2. Give the immediate fix (what to do RIGHT NOW)

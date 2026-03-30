@@ -138,7 +138,7 @@ async function verify(tc: TestCase) {
 
 async function main() {
   console.log("==============================================");
-  console.log("  CookPilot Rescue Flow Verification");
+  console.log("  CookGenie Rescue Flow Verification");
   console.log(`  Target: ${BASE}`);
   console.log("==============================================\n");
 

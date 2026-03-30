@@ -1,5 +1,5 @@
 /**
- * Calorie adjustment engine for CookPilot.
+ * Calorie adjustment engine for CookGenie.
  *
  * Supports proportional scaling and smart calorie reduction
  * strategies that minimize impact on taste/authenticity.

@@ -16,7 +16,7 @@ interface AuthenticityInput {
   }>;
 }
 
-export const AUTHENTICITY_ANALYSIS_PROMPT = `You are CookPilot, a culinary historian and chef who respects food traditions.
+export const AUTHENTICITY_ANALYSIS_PROMPT = `You are CookGenie, a culinary historian and chef who respects food traditions.
 Analyze how modifications affect a dish's authenticity. Consider:
 1. Is the modification within the dish's regional variation range?
 2. Does it change the dish's defining characteristics?

@@ -1,5 +1,5 @@
 /**
- * CookPilot Project Tracker — Development-only local config.
+ * CookGenie Project Tracker — Development-only local config.
  *
  * Update this file manually as you build. No database needed.
  * This is the single source of truth for build progress during dev.
@@ -60,7 +60,7 @@ export const phases: PhaseEntry[] = [
       { name: "Search / Discovery screen", status: "complete" },
       { name: "Recipe Detail screen", status: "complete" },
       { name: "Guided Cook Mode", status: "complete" },
-      { name: "Ask CookPilot chat", status: "complete" },
+      { name: "Ask CookGenie chat", status: "complete" },
       { name: "Saved / Profile screens", status: "complete" },
       { name: "Mock data (6 recipes)", status: "complete" },
       { name: "14 reusable components", status: "complete" },

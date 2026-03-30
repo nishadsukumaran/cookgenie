@@ -26,7 +26,7 @@ const monoFont = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CookPilot — Never Mess Up a Dish Again",
+  title: "CookGenie — Never Mess Up a Dish Again",
   description:
     "AI-powered cooking assistant that helps you find the best recipes, adapt them intelligently, and rescue you in real time.",
 };

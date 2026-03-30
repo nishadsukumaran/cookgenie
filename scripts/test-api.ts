@@ -1,5 +1,5 @@
 /**
- * CookPilot API Integration Tests
+ * CookGenie API Integration Tests
  *
  * Runs real HTTP calls against the local dev server.
  *
@@ -259,7 +259,7 @@ async function testGeneralFlows() {
 
 async function main() {
   console.log("==============================================");
-  console.log("  CookPilot API Test Suite");
+  console.log("  CookGenie API Test Suite");
   console.log("  Target: http://localhost:3000");
   console.log("==============================================");
 

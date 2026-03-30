@@ -94,7 +94,7 @@ export default function HomePage() {
               <ChefHat className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-heading text-2xl">CookPilot</h1>
+              <h1 className="font-heading text-2xl">CookGenie</h1>
               <p className="text-xs text-muted-foreground">
                 Your AI cooking companion
               </p>
@@ -189,7 +189,7 @@ export default function HomePage() {
             variants={fadeUp}
             className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
           >
-            What CookPilot does
+            What CookGenie does
           </motion.p>
           <div className="mt-2.5 grid grid-cols-3 gap-2">
             {powers.map((power) => (
@@ -234,7 +234,7 @@ export default function HomePage() {
           </div>
         </motion.section>
 
-        {/* Try CookPilot prompts */}
+        {/* Try CookGenie prompts */}
         <motion.section
           variants={stagger}
           initial="hidden"
@@ -244,7 +244,7 @@ export default function HomePage() {
           <motion.div variants={fadeUp}>
             <h2 className="font-heading text-lg">Try asking</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Tap any prompt to see CookPilot in action
+              Tap any prompt to see CookGenie in action
             </p>
           </motion.div>
           <div className="mt-3 space-y-2">

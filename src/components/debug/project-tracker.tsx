@@ -55,7 +55,7 @@ export function ProjectTracker() {
             {/* Header */}
             <div className="flex items-center justify-between border-b px-4 py-3">
               <div>
-                <h2 className="text-sm font-semibold">CookPilot Project Tracker</h2>
+                <h2 className="text-sm font-semibold">CookGenie Project Tracker</h2>
                 <p className="text-[11px] text-gray-500">
                   {overall}% complete · {testSummary.passing}/{testSummary.total} tests passing
                 </p>

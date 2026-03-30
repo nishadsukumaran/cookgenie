@@ -109,7 +109,7 @@ function scoreRecipe(recipe: Recipe, query: string, words: string[]): ScoredReci
 
 // ─── Recent Searches ────────────────────────────────
 
-const RECENT_KEY = "cookpilot_recent_searches";
+const RECENT_KEY = "cookgenie_recent_searches";
 const MAX_RECENT = 5;
 
 export function getRecentSearches(): string[] {

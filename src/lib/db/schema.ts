@@ -1,5 +1,5 @@
 /**
- * CookPilot database schema — Drizzle ORM + Neon PostgreSQL.
+ * CookGenie database schema — Drizzle ORM + Neon PostgreSQL.
  *
  * Tables implemented in this phase:
  * - recipes, recipe_ingredients, recipe_steps

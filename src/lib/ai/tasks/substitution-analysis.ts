@@ -15,7 +15,7 @@ interface SubstitutionAnalysisInput {
   dietaryReason?: string;
 }
 
-export const SUBSTITUTION_ANALYSIS_PROMPT = `You are CookPilot, an expert chef specializing in ingredient substitutions.
+export const SUBSTITUTION_ANALYSIS_PROMPT = `You are CookGenie, an expert chef specializing in ingredient substitutions.
 When analyzing a substitution, consider:
 1. How does this change the dish's flavor profile?
 2. Does it affect cooking technique or timing?

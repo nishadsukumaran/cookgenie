@@ -1,5 +1,38 @@
 # CookPilot — Build & Release Log
 
+## [1.1.0] — 2026-03-30 — Online Recipe Search (Real)
+
+### Added — Online Recipe Search (replaces "coming soon" placeholder)
+- **AI-powered recipe generation** — `ai.recipeGeneration()` task via Vercel AI Gateway
+  - System prompt enforces strict JSON output: recipe array with title, ingredients[], steps[], cuisine, calories
+  - Generates 3 structured recipe candidates per query using Claude Sonnet 4.6
+- **`POST /api/recipes/search`** — online search endpoint
+  - Accepts `{ query }`, calls AI, parses JSON response, returns `{ candidates[] }`
+  - Graceful error handling: empty array on JSON parse failure
+  - Debug trace + AI interaction logging
+- **`POST /api/recipes/import`** — normalize and save to Neon
+  - Inserts into `recipes` + `recipe_ingredients` + `recipe_steps`
+  - Sets `is_published: false`, `source_url: "ai-generated"`
+  - Returns `{ id, slug, title }`
+- **`ImportPreviewSheet`** — full recipe preview before import
+  - Title, cuisine/difficulty badges, stats, "AI Generated" purple badge
+  - Ingredients list + expandable steps preview
+  - Import button with loading/success states → navigates to recipe detail
+- **SearchInput wired to real online search:**
+  - No local results → "Search online with AI" primary button
+  - Few local results → "Find more recipes online" link
+  - Online results: purple-themed cards with Globe icon → Preview → Import
+
+### Flow: "pad thai" end-to-end
+```
+Type "pad thai" → no local match → tap "Search online with AI"
+  → AI generates 3 recipes → preview one → tap "Import to CookPilot"
+  → saved to Neon → navigate to /recipe/{slug}
+  → all intelligence works: rescue, substitution, modification, trust, editing
+```
+
+---
+
 ## [1.0.2] — 2026-03-30 — Search Quality & Discovery
 
 ### Added

@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, Clock, TrendingUp, Star } from "lucide-react";
+import { Search, X, Clock, TrendingUp, Star, Globe, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { recipes } from "@/data/mock-data";
 import { rankRecipes, getRecentSearches, addRecentSearch } from "@/lib/search/ranking";
+import { ImportPreviewSheet } from "@/components/recipe/import-preview-sheet";
 
 interface SearchInputProps {
   value: string;
@@ -44,6 +45,10 @@ export function SearchInput({
   const router = useRouter();
   const [focused, setFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [onlineResults, setOnlineResults] = useState<any[]>([]);
+  const [onlineLoading, setOnlineLoading] = useState(false);
+  const [previewCandidate, setPreviewCandidate] = useState<any>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,6 +78,27 @@ export function SearchInput({
     onChange(query);
     setFocused(false);
     router.push(`/search?q=${encodeURIComponent(query)}`);
+  }
+
+  async function searchOnline() {
+    if (!value.trim() || onlineLoading) return;
+    setOnlineLoading(true);
+    setOnlineResults([]);
+    try {
+      const res = await fetch("/api/recipes/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: value.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOnlineResults(data.candidates ?? []);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setOnlineLoading(false);
+    }
   }
 
   function handleSubmit() {
@@ -153,15 +179,69 @@ export function SearchInput({
             </div>
           )}
 
-          {/* No results */}
-          {hasQuery && rankedResults.length === 0 && (
+          {/* No local results — offer online search */}
+          {hasQuery && rankedResults.length === 0 && onlineResults.length === 0 && (
             <div className="p-4 text-center">
               <p className="text-xs text-muted-foreground">
                 No local recipes match &ldquo;{value}&rdquo;
               </p>
-              <p className="mt-1.5 text-[10px] text-muted-foreground/60">
-                Online recipe search coming soon
+              <button
+                onClick={searchOnline}
+                disabled={onlineLoading}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {onlineLoading ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Searching...</>
+                ) : (
+                  <><Globe className="h-3.5 w-3.5" /> Search online with AI</>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Online search results */}
+          {hasQuery && onlineResults.length > 0 && (
+            <div className="p-1.5">
+              <p className="px-3 py-1 text-[10px] font-semibold text-purple-600 uppercase tracking-wider">
+                AI-generated recipes
               </p>
+              {onlineResults.map((candidate: any) => (
+                <button
+                  key={candidate.id}
+                  onClick={() => {
+                    setPreviewCandidate(candidate);
+                    setPreviewOpen(true);
+                    setFocused(false);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-muted"
+                >
+                  <Globe className="h-4 w-4 text-purple-500 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{candidate.title}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {candidate.cuisine} · {candidate.cookingTime}m · {candidate.calories} cal
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-purple-500 font-medium shrink-0">Preview</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Also offer online search when local results exist but are few */}
+          {hasQuery && rankedResults.length > 0 && rankedResults.length < 3 && onlineResults.length === 0 && (
+            <div className="border-t border-border/50 p-2.5 text-center">
+              <button
+                onClick={searchOnline}
+                disabled={onlineLoading}
+                className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline disabled:opacity-50"
+              >
+                {onlineLoading ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" /> Searching...</>
+                ) : (
+                  <><Globe className="h-3 w-3" /> Find more recipes online</>
+                )}
+              </button>
             </div>
           )}
 
@@ -203,6 +283,18 @@ export function SearchInput({
           )}
         </div>
       )}
+
+      {/* Import Preview Sheet */}
+      <ImportPreviewSheet
+        candidate={previewCandidate}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        onImported={(data) => {
+          setPreviewOpen(false);
+          setOnlineResults([]);
+          router.push(`/recipe/${data.slug}`);
+        }}
+      />
     </div>
   );
 }

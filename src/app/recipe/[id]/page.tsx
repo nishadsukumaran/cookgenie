@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Save,
   ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -436,6 +437,25 @@ export default function RecipeDetailPage() {
           </div>
         </motion.section>
 
+        {/* AI Summary callout */}
+        {recipe.aiSummary && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mt-6 rounded-2xl border border-primary/15 bg-primary/5 p-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-primary mb-1">AI Insight</p>
+                <p className="text-sm text-foreground leading-relaxed">{recipe.aiSummary}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Sticky Actions */}

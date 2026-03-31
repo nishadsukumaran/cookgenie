@@ -1,8 +1,8 @@
 /**
  * AI Gateway configuration for CookGenie.
  *
- * Auto-detects mock vs live mode based on VERCEL_OIDC_TOKEN.
- * Uses "provider/model" strings routed through Vercel AI Gateway.
+ * In v0 projects, the Vercel AI Gateway works automatically without explicit tokens.
+ * We only fall back to mock mode if MOCK_AI environment variable is explicitly set.
  */
 
 export const AI_CONFIG = {
@@ -11,29 +11,31 @@ export const AI_CONFIG = {
 
   /** Model tiers — all use gateway format */
   models: {
-    primary: "anthropic/claude-sonnet-4.6",
-    validator: "google/gemini-2.5-flash",
-    arbitrator: "anthropic/claude-sonnet-4.6",
-    fast: "anthropic/claude-haiku-4.5",
+    primary: "openai/gpt-4o-mini",
+    validator: "openai/gpt-4o-mini",
+    arbitrator: "openai/gpt-4o-mini",
+    fast: "openai/gpt-4o-mini",
   },
 } as const;
 
 /**
  * Check if the AI Gateway is configured and available.
+ * In v0 projects, the gateway is always available (zero-config).
  */
 export function isGatewayAvailable(): boolean {
-  if (typeof process === "undefined") return false;
-  return !!(
-    process.env.VERCEL_OIDC_TOKEN || process.env.AI_GATEWAY_API_KEY
-  );
+  // In v0/Vercel, gateway is always available
+  // Only return false if explicitly mocked
+  if (typeof process === "undefined") return true;
+  return process.env.MOCK_AI !== "true";
 }
 
 /**
  * Whether to use mock responses.
- * Live mode when OIDC token is present.
+ * Only mock if explicitly set via MOCK_AI=true.
  */
 export function shouldUseMock(): boolean {
-  return !isGatewayAvailable();
+  if (typeof process === "undefined") return false;
+  return process.env.MOCK_AI === "true";
 }
 
 /**

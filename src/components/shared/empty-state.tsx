@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { LucideIcon } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
 interface EmptyStateProps {
   icon: React.ReactNode | LucideIcon
@@ -16,8 +16,8 @@ export function EmptyState({
   action,
   className,
 }: EmptyStateProps) {
-  const IconComponent = typeof icon === 'function' ? icon : null
-  const isIconComponent = IconComponent !== null
+  // Check if icon is a Lucide component (function) vs a ReactNode
+  const isIconComponent = typeof icon === 'function'
 
   return (
     <div
@@ -28,9 +28,12 @@ export function EmptyState({
     >
       <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-accent text-primary">
         {isIconComponent ? (
-          <IconComponent className="w-8 h-8" />
+          (() => {
+            const IconComponent = icon as LucideIcon
+            return <IconComponent className="w-8 h-8" />
+          })()
         ) : (
-          icon
+          icon as React.ReactNode
         )}
       </div>
       <h3 className="mt-4 font-heading text-xl font-semibold text-foreground">{title}</h3>

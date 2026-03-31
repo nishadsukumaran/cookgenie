@@ -12,6 +12,7 @@ interface RecipeCardProps {
   recipe: Recipe
   variant?: "default" | "compact" | "featured"
   showAiSummary?: boolean
+  priority?: boolean
   className?: string
 }
 
@@ -19,6 +20,7 @@ export function RecipeCard({
   recipe,
   variant = "default",
   showAiSummary = false,
+  priority = false,
   className,
 }: RecipeCardProps) {
   if (variant === "compact") {
@@ -37,6 +39,7 @@ export function RecipeCard({
               alt={recipe.title}
               fill
               sizes="80px"
+              priority={priority}
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
           </div>
@@ -45,7 +48,7 @@ export function RecipeCard({
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-0.5">
                 <Clock className="h-3.5 w-3.5" />
-                {recipe.cookTime}
+                {`${recipe.cookingTime}m`}
               </span>
               <span className="text-border">·</span>
               <span className="flex items-center gap-0.5">
@@ -75,6 +78,7 @@ export function RecipeCard({
               alt={recipe.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <div className="absolute inset-0 image-overlay-bottom" />
@@ -92,10 +96,10 @@ export function RecipeCard({
           <div className="p-4">
             <h3 className="font-heading text-lg font-bold text-foreground">{recipe.title}</h3>
             <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-              {recipe.description || recipe.cuisineType}
+              {recipe.description || recipe.cuisine}
             </p>
             <div className="mt-4 flex items-center gap-2 flex-wrap text-sm">
-              <RecipeStatPill icon={<Clock className="h-3.5 w-3.5" />} value={recipe.cookTime} />
+              <RecipeStatPill icon={<Clock className="h-3.5 w-3.5" />} value={`${recipe.cookingTime}m`} />
               <RecipeStatPill icon={<Flame className="h-3.5 w-3.5" />} value={`${recipe.servings} servings`} />
               <RecipeStatPill icon={<Star className="h-3.5 w-3.5 fill-primary text-primary" />} value={recipe.rating.toString()} />
             </div>
@@ -127,6 +131,7 @@ export function RecipeCard({
             alt={recipe.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={priority}
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {recipe.tags?.[0] && (
@@ -142,10 +147,10 @@ export function RecipeCard({
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <span className="flex items-center gap-0.5">
               <Clock className="h-3.5 w-3.5" />
-              {recipe.cookTime}
+              {`${recipe.cookingTime}m`}
             </span>
             <span className="text-border">·</span>
-            <span>{recipe.cuisineType}</span>
+            <span>{recipe.cuisine}</span>
             <span className="text-border">·</span>
             <span className="flex items-center gap-0.5">
               <Star className="h-3.5 w-3.5 fill-primary text-primary" />

@@ -401,7 +401,7 @@ function FeaturedRecipeCard({ recipe, rank }: { recipe: Recipe; rank: number }) 
           alt={recipe.title}
           fill
           sizes="80px"
-          loading={rank === 1 ? "eager" : "lazy"}
+          priority={rank <= 3}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </div>

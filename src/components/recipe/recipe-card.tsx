@@ -12,6 +12,7 @@ interface RecipeCardProps {
   recipe: Recipe
   variant?: "default" | "compact" | "featured"
   showAiSummary?: boolean
+  priority?: boolean
   className?: string
 }
 
@@ -19,6 +20,7 @@ export function RecipeCard({
   recipe,
   variant = "default",
   showAiSummary = false,
+  priority = false,
   className,
 }: RecipeCardProps) {
   if (variant === "compact") {
@@ -37,6 +39,7 @@ export function RecipeCard({
               alt={recipe.title}
               fill
               sizes="80px"
+              priority={priority}
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
           </div>
@@ -75,6 +78,7 @@ export function RecipeCard({
               alt={recipe.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
             <div className="absolute inset-0 image-overlay-bottom" />
@@ -127,6 +131,7 @@ export function RecipeCard({
             alt={recipe.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={priority}
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {recipe.tags?.[0] && (

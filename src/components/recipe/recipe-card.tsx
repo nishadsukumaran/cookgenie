@@ -1,17 +1,18 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Clock, Star, Flame, ChefHat } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import type { Recipe } from "@/data/mock-data";
+import Link from "next/link"
+import Image from "next/image"
+import { Clock, Star, Flame, ChefHat } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
+import type { Recipe } from "@/data/mock-data"
 
 interface RecipeCardProps {
-  recipe: Recipe;
-  variant?: "default" | "compact" | "featured";
-  showAiSummary?: boolean;
-  className?: string;
+  recipe: Recipe
+  variant?: "default" | "compact" | "featured"
+  showAiSummary?: boolean
+  className?: string
 }
 
 export function RecipeCard({
@@ -26,32 +27,35 @@ export function RecipeCard({
         <motion.div
           whileTap={{ scale: 0.98 }}
           className={cn(
-            "flex gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md",
+            "group flex gap-3 rounded-lg border border-border bg-card p-3 shadow-card hover:shadow-card-hover transition-all duration-300",
             className
           )}
         >
-          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-amber-light">
-            <div className="flex h-full w-full items-center justify-center text-3xl">
-              {recipe.cuisine === "Indian" ? "🍛" : recipe.cuisine === "Arabic" ? "🫓" : recipe.cuisine === "Middle Eastern" ? "🍳" : "🥗"}
-            </div>
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-muted">
+            <Image
+              src={recipe.image || "/images/placeholder.jpg"}
+              alt={recipe.name}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
           </div>
-          <div className="flex flex-1 flex-col justify-center gap-1 overflow-hidden">
-            <h3 className="truncate font-semibold text-sm">{recipe.title}</h3>
+          <div className="flex flex-1 flex-col justify-center gap-1.5 overflow-hidden">
+            <h3 className="truncate font-semibold text-sm text-foreground">{recipe.name}</h3>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-0.5">
-                <Clock className="h-3 w-3" />
-                {recipe.cookingTime}m
+                <Clock className="h-3.5 w-3.5" />
+                {recipe.cookTime}
               </span>
-              <span>·</span>
+              <span className="text-border">·</span>
               <span className="flex items-center gap-0.5">
-                <Star className="h-3 w-3 fill-amber text-amber" />
+                <Star className="h-3.5 w-3.5 fill-amber text-primary" />
                 {recipe.rating}
               </span>
             </div>
           </div>
         </motion.div>
       </Link>
-    );
+    )
   }
 
   if (variant === "featured") {
@@ -60,20 +64,23 @@ export function RecipeCard({
         <motion.div
           whileTap={{ scale: 0.98 }}
           className={cn(
-            "group relative overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-shadow hover:shadow-lg",
+            "group relative overflow-hidden rounded-xl border border-border bg-card shadow-card hover:shadow-float transition-all duration-300",
             className
           )}
         >
-          <div className="relative h-48 w-full bg-gradient-to-br from-amber-light to-amber/20">
-            <div className="flex h-full w-full items-center justify-center text-6xl">
-              {recipe.cuisine === "Indian" ? "🍛" : recipe.cuisine === "Arabic" ? "🫓" : recipe.cuisine === "Middle Eastern" ? "🍳" : "🥗"}
-            </div>
+          <div className="relative h-48 w-full bg-surface overflow-hidden">
+            <Image
+              src={recipe.image || "/images/placeholder.jpg"}
+              alt={recipe.name}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="absolute inset-0 image-overlay-bottom" />
             <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-              {recipe.tags.slice(0, 2).map((tag) => (
+              {recipe.tags?.slice(0, 2).map((tag) => (
                 <Badge
                   key={tag}
-                  variant="secondary"
-                  className="bg-background/90 backdrop-blur-sm text-xs font-medium"
+                  className="bg-background/90 backdrop-blur-sm text-xs font-medium text-foreground"
                 >
                   {tag}
                 </Badge>
@@ -81,26 +88,25 @@ export function RecipeCard({
             </div>
           </div>
           <div className="p-4">
-            <h3 className="font-heading text-xl">{recipe.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-              {recipe.description}
+            <h3 className="font-heading text-lg font-bold text-foreground">{recipe.name}</h3>
+            <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+              {recipe.description || recipe.cuisineType}
             </p>
-            <div className="mt-3 flex items-center gap-3 text-sm text-muted-foreground">
-              <RecipeStatPill icon={<Clock className="h-3.5 w-3.5" />} value={`${recipe.cookingTime}m`} />
-              <RecipeStatPill icon={<Flame className="h-3.5 w-3.5" />} value={`${recipe.calories} cal`} />
-              <RecipeStatPill icon={<Star className="h-3.5 w-3.5 fill-amber text-amber" />} value={recipe.rating.toString()} />
-              <RecipeStatPill icon={<ChefHat className="h-3.5 w-3.5" />} value={recipe.difficulty} />
+            <div className="mt-4 flex items-center gap-2 flex-wrap text-sm">
+              <RecipeStatPill icon={<Clock className="h-3.5 w-3.5" />} value={recipe.cookTime} />
+              <RecipeStatPill icon={<Flame className="h-3.5 w-3.5" />} value={`${recipe.servings} servings`} />
+              <RecipeStatPill icon={<Star className="h-3.5 w-3.5 fill-primary text-primary" />} value={recipe.rating.toString()} />
             </div>
             {showAiSummary && (
-              <div className="mt-3 rounded-xl bg-accent/60 p-3 text-xs text-accent-foreground">
-                <span className="mr-1 font-semibold text-primary">AI:</span>
-                {recipe.aiSummary}
+              <div className="mt-3 rounded-lg bg-accent/80 p-3 text-xs text-foreground">
+                <span className="font-semibold text-primary">AI: </span>
+                {recipe.description?.substring(0, 80)}...
               </div>
             )}
           </div>
         </motion.div>
       </Link>
-    );
+    )
   }
 
   // Default variant
@@ -109,55 +115,57 @@ export function RecipeCard({
       <motion.div
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md",
+          "group overflow-hidden rounded-lg border border-border bg-card shadow-card hover:shadow-card-hover transition-all duration-300",
           className
         )}
       >
-        <div className="relative h-36 w-full bg-gradient-to-br from-amber-light to-amber/20">
-          <div className="flex h-full w-full items-center justify-center text-5xl">
-            {recipe.cuisine === "Indian" ? "🍛" : recipe.cuisine === "Arabic" ? "🫓" : recipe.cuisine === "Middle Eastern" ? "🍳" : "🥗"}
-          </div>
-          {recipe.tags[0] && (
+        <div className="relative h-40 w-full bg-surface overflow-hidden">
+          <Image
+            src={recipe.image || "/images/placeholder.jpg"}
+            alt={recipe.name}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          {recipe.tags?.[0] && (
             <Badge
-              variant="secondary"
-              className="absolute top-2.5 left-2.5 bg-background/90 backdrop-blur-sm text-xs"
+              className="absolute top-2.5 left-2.5 bg-background/90 backdrop-blur-sm text-xs font-medium text-foreground"
             >
               {recipe.tags[0]}
             </Badge>
           )}
         </div>
-        <div className="p-3.5">
-          <h3 className="font-semibold text-sm">{recipe.title}</h3>
-          <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="p-4">
+          <h3 className="font-semibold text-sm text-foreground">{recipe.name}</h3>
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <span className="flex items-center gap-0.5">
-              <Clock className="h-3 w-3" />
-              {recipe.cookingTime}m
+              <Clock className="h-3.5 w-3.5" />
+              {recipe.cookTime}
             </span>
-            <span>·</span>
-            <span>{recipe.difficulty}</span>
-            <span>·</span>
+            <span className="text-border">·</span>
+            <span>{recipe.cuisineType}</span>
+            <span className="text-border">·</span>
             <span className="flex items-center gap-0.5">
-              <Star className="h-3 w-3 fill-amber text-amber" />
+              <Star className="h-3.5 w-3.5 fill-primary text-primary" />
               {recipe.rating}
             </span>
           </div>
         </div>
       </motion.div>
     </Link>
-  );
+  )
 }
 
 function RecipeStatPill({
   icon,
   value,
 }: {
-  icon: React.ReactNode;
-  value: string;
+  icon: React.ReactNode
+  value: string
 }) {
   return (
-    <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+    <span className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-foreground">
       {icon}
       {value}
     </span>
-  );
+  )
 }

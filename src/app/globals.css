@@ -30,39 +30,65 @@
 
   --color-amber: var(--amber);
   --color-amber-light: var(--amber-light);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
 
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+  --radius-3xl: calc(var(--radius) * 2.5);
+  --radius-4xl: calc(var(--radius) * 3);
 }
 
 :root {
-  --background: oklch(0.985 0.003 85);
-  --foreground: oklch(0.145 0.005 50);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.005 50);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.005 50);
-  --primary: oklch(0.62 0.17 45);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.004 85);
-  --secondary-foreground: oklch(0.2 0.005 50);
-  --muted: oklch(0.955 0.003 85);
-  --muted-foreground: oklch(0.46 0.005 50);
-  --accent: oklch(0.955 0.018 55);
-  --accent-foreground: oklch(0.2 0.005 50);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.915 0.004 85);
-  --input: oklch(0.915 0.004 85);
-  --ring: oklch(0.62 0.17 45);
-  --radius: 0.75rem;
+  /* Warm parchment background — more editorial than pure white */
+  --background: oklch(0.982 0.006 75);
+  --foreground: oklch(0.13 0.012 45);
 
-  --amber: oklch(0.62 0.17 45);
-  --amber-light: oklch(0.94 0.04 70);
+  /* Cards sit cleanly on background */
+  --card: oklch(0.998 0.002 80);
+  --card-foreground: oklch(0.13 0.012 45);
+
+  /* Popovers */
+  --popover: oklch(0.998 0.002 80);
+  --popover-foreground: oklch(0.13 0.012 45);
+
+  /* Deep warm amber primary — like a well-seasoned pan */
+  --primary: oklch(0.58 0.19 42);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* Subtle secondary */
+  --secondary: oklch(0.955 0.008 80);
+  --secondary-foreground: oklch(0.2 0.01 45);
+
+  /* Muted backgrounds for inputs / chips */
+  --muted: oklch(0.948 0.006 78);
+  --muted-foreground: oklch(0.44 0.008 50);
+
+  /* Warm accent tint — cream/amber wash */
+  --accent: oklch(0.948 0.028 60);
+  --accent-foreground: oklch(0.22 0.012 45);
+
+  /* Destructive */
+  --destructive: oklch(0.565 0.25 27);
+
+  /* Borders — warm and barely-there */
+  --border: oklch(0.908 0.008 78);
+  --input: oklch(0.908 0.008 78);
+  --ring: oklch(0.58 0.19 42);
+
+  /* Corner radius */
+  --radius: 0.875rem;
+
+  /* Brand amber */
+  --amber: oklch(0.58 0.19 42);
+  --amber-light: oklch(0.945 0.038 68);
+
+  /* Surface layers */
+  --surface: oklch(0.968 0.01 76);
+  --surface-raised: oklch(0.998 0.002 80);
 }
 
 @layer base {
@@ -71,6 +97,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   html {
     @apply font-sans;
@@ -95,4 +122,51 @@ body {
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Premium card shadow system */
+.shadow-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.04);
+}
+.shadow-card-hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.06);
+}
+.shadow-float {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Image treatment */
+.recipe-image {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Gradient overlays for hero images */
+.image-overlay-bottom {
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+}
+
+/* Typography refinements */
+.font-heading {
+  letter-spacing: -0.01em;
+}
+
+/* Animated gradient for loading states */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--accent) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Pulse for CTA */
+@keyframes soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.58 0.19 42 / 0.3); }
+  50% { box-shadow: 0 0 0 6px oklch(0.58 0.19 42 / 0); }
+}
+.pulse-cta {
+  animation: soft-pulse 2s ease-in-out infinite;
 }

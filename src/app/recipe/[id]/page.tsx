@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
@@ -21,6 +22,7 @@ import {
   AlertCircle,
   Save,
   ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +46,14 @@ import { transformRecipe } from "@/lib/engines/transformation";
 import { computeTrustMetrics } from "@/lib/engines/transformation/trust";
 import type { TransformationWarning } from "@/lib/engines/types";
 
+const recipeImageMap: Record<string, string> = {
+  "butter-chicken": "/images/butter-chicken.jpg",
+  "chicken-biryani": "/images/chicken-biryani.jpg",
+  "paneer-butter-masala": "/images/paneer-butter-masala.jpg",
+  shakshuka: "/images/shakshuka.jpg",
+  machboos: "/images/machboos.jpg",
+};
+
 export default function RecipeDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -55,7 +65,10 @@ export default function RecipeDetailPage() {
   if (!recipe) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Recipe not found</p>
+        <div className="text-center">
+          <ChefHat className="mx-auto h-12 w-12 text-muted-foreground/30" />
+          <p className="mt-3 text-muted-foreground">Recipe not found</p>
+        </div>
       </div>
     );
   }
@@ -68,11 +81,8 @@ export default function RecipeDetailPage() {
     [recipe, servings]
   );
 
-  // Determine if this is pure scaling or a real modification
   const isModified = servings !== recipe.servings;
-  const transformationType = isModified ? "scaling" as const : "scaling" as const;
-  // Future: when substitutions or calorie reductions are applied on this page,
-  // change to "modification" or "substitution"
+  const transformationType = "scaling" as const;
 
   const trustMetrics = useMemo(
     () =>
@@ -101,94 +111,110 @@ export default function RecipeDetailPage() {
         break;
       case "make-healthier":
       case "reduce-calories":
-        router.push(`/ask?message=${encodeURIComponent(
-          actionId === "reduce-calories"
-            ? `Reduce calories by 20% for ${recipe.title}`
-            : `Make ${recipe.title} healthier but keep the signature`
-        )}&recipeId=${recipe.id}`);
+        router.push(
+          `/ask?message=${encodeURIComponent(
+            actionId === "reduce-calories"
+              ? `Reduce calories by 20% for ${recipe.title}`
+              : `Make ${recipe.title} healthier but keep the signature`
+          )}&recipeId=${recipe.id}`
+        );
         break;
       case "reduce-spice":
-        router.push(`/ask?message=${encodeURIComponent(`Reduce spice for ${recipe.title}`)}&recipeId=${recipe.id}`);
+        router.push(
+          `/ask?message=${encodeURIComponent(`Reduce spice for ${recipe.title}`)}&recipeId=${recipe.id}`
+        );
         break;
     }
   }
 
+  const heroImage = recipeImageMap[recipe.id] ?? "/images/butter-chicken.jpg";
+
   return (
-    <div className="min-h-screen pb-28">
+    <div className="min-h-screen pb-28 bg-background">
+      {/* Transparent header over hero image */}
       <AppHeader
         showBack
         transparent
         rightAction={
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             <button
               onClick={() => setIsSaved(!isSaved)}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white transition-colors hover:bg-black/60"
               aria-label={isSaved ? "Remove from saved" : "Save recipe"}
             >
               <Bookmark
-                className={`h-4.5 w-4.5 ${isSaved ? "fill-primary text-primary" : ""}`}
+                className={`h-4 w-4 ${isSaved ? "fill-white" : ""}`}
               />
             </button>
             <button
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white transition-colors hover:bg-black/60"
               aria-label="Share recipe"
             >
-              <Share2 className="h-4.5 w-4.5" />
+              <Share2 className="h-4 w-4" />
             </button>
           </div>
         }
       />
 
-      {/* Hero Image */}
-      <div className="relative -mt-14 h-56 w-full bg-gradient-to-br from-amber-light to-amber/20">
-        <div className="flex h-full w-full items-center justify-center text-7xl">
-          {recipe.cuisine === "Indian"
-            ? "🍛"
-            : recipe.cuisine === "Arabic"
-              ? "🫓"
-              : recipe.cuisine === "Middle Eastern"
-                ? "🍳"
-                : "🥗"}
+      {/* Full-bleed hero */}
+      <div className="relative -mt-14 h-72 w-full overflow-hidden">
+        <Image
+          src={heroImage}
+          alt={recipe.title}
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover"
+        />
+        <div className="absolute inset-0 image-overlay-bottom" />
+
+        {/* Hero text over image */}
+        <div className="absolute bottom-0 inset-x-0 px-4 pb-5">
+          <div className="mx-auto max-w-lg">
+            <div className="flex flex-wrap items-center gap-1.5 mb-2">
+              <RecipeOwnerBadge type="original" />
+              {recipe.tags.slice(0, 2).map((tag) => (
+                <Badge
+                  key={tag}
+                  className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[10px]"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+            <h1 className="font-heading text-3xl text-white leading-tight text-balance">
+              {recipe.title}
+            </h1>
+          </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-lg px-4">
-        {/* Title & Tags */}
+        {/* Quick stats strip */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-5"
-        >
-          <div className="flex flex-wrap items-center gap-1.5">
-            <RecipeOwnerBadge type="original" />
-            {recipe.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-          <h1 className="mt-2 font-heading text-3xl">{recipe.title}</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-            {recipe.description}
-          </p>
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
           className="mt-4 flex flex-wrap gap-2"
         >
-          <StatPill icon={<Clock className="h-3.5 w-3.5" />} label={`${recipe.prepTime + recipe.cookingTime} min total`} />
+          <StatPill icon={<Clock className="h-3.5 w-3.5" />} label={`${recipe.prepTime + recipe.cookingTime} min`} />
           <StatPill icon={<Flame className="h-3.5 w-3.5" />} label={`${transformation.calories} cal`} highlight={isModified} />
-          <StatPill icon={<Star className="h-3.5 w-3.5 fill-amber text-amber" />} label={recipe.rating.toString()} />
+          <StatPill icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />} label={recipe.rating.toString()} />
           <StatPill icon={<ChefHat className="h-3.5 w-3.5" />} label={recipe.difficulty} />
         </motion.div>
 
+        {/* Description */}
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mt-3 text-sm text-muted-foreground leading-relaxed"
+        >
+          {recipe.description}
+        </motion.p>
+
         {/* Quick Actions */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08 }}
           className="mt-4"
@@ -198,15 +224,15 @@ export default function RecipeDetailPage() {
 
         {/* Trust Layer */}
         <AnimatePresence>
-          {isModified && transformationType === "scaling" && (
+          {isModified && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="mt-4"
             >
-              <div className="flex items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
-                <ShieldCheck className="h-4 w-4 text-green-600" />
+              <div className="flex items-center gap-2.5 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+                <ShieldCheck className="h-4 w-4 text-green-600 shrink-0" />
                 <div>
                   <p className="text-xs font-semibold text-green-800">
                     Scaled to {servings} servings — taste and authenticity unchanged
@@ -218,30 +244,9 @@ export default function RecipeDetailPage() {
               </div>
             </motion.div>
           )}
-          {isModified && transformationType !== "scaling" && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-4 space-y-3"
-            >
-              <div className="flex items-start gap-3">
-                <AuthenticityMeter
-                  score={trustMetrics.authenticity.score}
-                  label={trustMetrics.authenticity.label}
-                  className="flex-1"
-                />
-              </div>
-              <ConfidenceRiskBadge
-                confidence={trustMetrics.confidence}
-                risk={trustMetrics.risk}
-              />
-              <BeforeAfterCard comparison={trustMetrics.comparison} />
-            </motion.div>
-          )}
         </AnimatePresence>
 
-        {/* Authenticity Badge (simple, always visible when unmodified) */}
+        {/* Authenticity Badge */}
         {!isModified && (
           <div className="mt-4">
             <AuthenticityBadge level="authentic" />
@@ -268,29 +273,38 @@ export default function RecipeDetailPage() {
 
         {/* Servings Control */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4"
+          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 shadow-card"
         >
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Servings</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div>
+              <span className="text-sm font-semibold">Servings</span>
+              {isModified && (
+                <p className="text-[10px] text-primary font-medium">
+                  Adjusted from {recipe.servings}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setServings(Math.max(1, servings - 1))}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-border hover:bg-muted"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background hover:bg-muted transition-colors"
               aria-label="Decrease servings"
             >
               <Minus className="h-3.5 w-3.5" />
             </button>
-            <span className="w-8 text-center text-lg font-semibold tabular-nums">
+            <span className="w-8 text-center text-xl font-bold tabular-nums">
               {servings}
             </span>
             <button
               onClick={() => setServings(servings + 1)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-border hover:bg-muted"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background hover:bg-muted transition-colors"
               aria-label="Increase servings"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -300,20 +314,25 @@ export default function RecipeDetailPage() {
 
         {/* Ingredients */}
         <motion.section
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
           className="mt-6"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <h2 className="font-heading text-xl">Ingredients</h2>
-            <span className="text-xs text-muted-foreground">
+            <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
               {transformation.ingredients.length} items
             </span>
           </div>
-          <div className="mt-3 rounded-2xl border border-border bg-card px-4">
+          <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
             {transformation.ingredients.map((ingredient, i) => (
-              <div key={i} className="flex items-center">
+              <div
+                key={i}
+                className={`flex items-center px-4 ${
+                  i < transformation.ingredients.length - 1 ? "border-b border-border/50" : ""
+                }`}
+              >
                 <div className="flex-1">
                   <IngredientRow
                     ingredient={ingredient}
@@ -336,26 +355,24 @@ export default function RecipeDetailPage() {
         {/* Substitutions */}
         {recipe.substitutions.length > 0 && (
           <motion.section
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.18 }}
             className="mt-6"
           >
-            <h2 className="font-heading text-xl">Smart Substitutions</h2>
-            <div className="mt-3 space-y-2.5">
+            <h2 className="font-heading text-xl mb-3">Smart Swaps</h2>
+            <div className="space-y-2.5">
               {recipe.substitutions.map((sub, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl border border-border bg-card p-4"
+                  className="rounded-2xl border border-border bg-card p-4 shadow-card"
                 >
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium">{sub.original}</span>
+                    <span className="font-semibold">{sub.original}</span>
                     <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
-                    <span className="font-medium text-primary">
-                      {sub.substitute}
-                    </span>
+                    <span className="font-semibold text-primary">{sub.substitute}</span>
                   </div>
-                  <p className="mt-1.5 text-xs text-muted-foreground">
+                  <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
                     {sub.impact}
                   </p>
                 </div>
@@ -366,18 +383,41 @@ export default function RecipeDetailPage() {
 
         {/* Steps */}
         <motion.section
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
+          transition={{ delay: 0.22 }}
           className="mt-6"
         >
-          <h2 className="font-heading text-xl">Preparation</h2>
-          <div className="mt-3 space-y-3">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-heading text-xl">Preparation</h2>
+            <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+              {recipe.steps.length} steps
+            </span>
+          </div>
+          <div className="space-y-3">
             {recipe.steps.map((step) => (
               <StepCard key={step.number} step={step} />
             ))}
           </div>
         </motion.section>
+
+        {/* AI Summary callout */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mt-6 rounded-2xl border border-primary/15 bg-primary/5 p-4"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-primary mb-1">AI Insight</p>
+              <p className="text-sm text-foreground leading-relaxed">{recipe.aiSummary}</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* Sticky Actions */}
@@ -398,7 +438,7 @@ export default function RecipeDetailPage() {
               originalCalories={recipe.calories}
               trustMetrics={trustMetrics}
             >
-              <Button variant="outline" className="h-12 rounded-2xl px-4">
+              <Button variant="outline" className="h-12 rounded-2xl px-4 shadow-card">
                 <Save className="h-4 w-4" />
               </Button>
             </SaveVariantDialog>
@@ -406,7 +446,7 @@ export default function RecipeDetailPage() {
           <Button
             variant="outline"
             onClick={() => router.push(`/ask?recipe=${recipe.id}`)}
-            className="h-12 rounded-2xl px-4"
+            className="h-12 rounded-2xl px-4 shadow-card"
           >
             <MessageCircle className="h-4 w-4" />
           </Button>
@@ -419,9 +459,9 @@ export default function RecipeDetailPage() {
 const warningSeverityConfig = {
   info: {
     icon: Info,
-    bg: "bg-blue-50 border-blue-200",
-    text: "text-blue-800",
-    iconColor: "text-blue-500",
+    bg: "bg-sky-50 border-sky-200",
+    text: "text-sky-800",
+    iconColor: "text-sky-500",
   },
   caution: {
     icon: AlertTriangle,
@@ -442,13 +482,9 @@ function WarningBanner({ warning }: { warning: TransformationWarning }) {
   const Icon = config.icon;
 
   return (
-    <div
-      className={`flex items-start gap-2.5 rounded-2xl border p-3.5 ${config.bg}`}
-    >
+    <div className={`flex items-start gap-2.5 rounded-2xl border p-3.5 ${config.bg}`}>
       <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${config.iconColor}`} />
-      <p className={`text-xs leading-relaxed ${config.text}`}>
-        {warning.message}
-      </p>
+      <p className={`text-xs leading-relaxed ${config.text}`}>{warning.message}</p>
     </div>
   );
 }
@@ -464,7 +500,7 @@ function StatPill({
 }) {
   return (
     <span
-      className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium ${
+      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
         highlight
           ? "bg-amber-light text-primary ring-1 ring-primary/20"
           : "bg-muted text-muted-foreground"

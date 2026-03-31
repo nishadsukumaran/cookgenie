@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
 import {
   ChefHat,
   BookOpen,
@@ -11,12 +11,12 @@ import {
   ChevronRight,
   Flame,
   Ruler,
-} from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AppHeader } from "@/components/layout/app-header";
+} from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AppHeader } from "@/components/layout/app-header"
 
 interface UserPreferences {
   spicePreference: string | null;
@@ -198,7 +198,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background pb-24">
       <AppHeader title="Profile" />
 
       <div className="mx-auto max-w-lg px-4 py-6">
@@ -209,13 +209,13 @@ export default function ProfilePage() {
           className="flex items-center gap-4"
         >
           <Avatar className="h-16 w-16">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xl font-heading">
-              N
+            <AvatarFallback className="bg-primary text-white text-lg font-semibold">
+              HC
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="font-heading text-xl">Home Chef</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="font-heading text-2xl font-bold text-foreground">Home Chef</h2>
+            <p className="text-sm text-muted-foreground mt-1">
               Cooking since January 2026
             </p>
           </div>
@@ -234,13 +234,13 @@ export default function ProfilePage() {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="flex flex-col items-center rounded-2xl border border-border bg-card p-4"
+                className="flex flex-col items-center rounded-lg border border-border bg-card p-4 shadow-card hover:shadow-card-hover transition-all duration-300"
               >
                 <stat.icon className="h-5 w-5 text-primary" />
-                <span className="mt-2 text-lg font-bold tabular-nums">
+                <span className="mt-2 text-xl font-bold tabular-nums text-foreground">
                   {stat.value}
                 </span>
-                <span className="mt-0.5 text-center text-[11px] text-muted-foreground">
+                <span className="mt-0.5 text-center text-xs text-muted-foreground">
                   {stat.label}
                 </span>
               </div>
@@ -259,7 +259,7 @@ export default function ProfilePage() {
               transition={{ delay: 0.1 }}
               className="mt-6"
             >
-              <h3 className="text-sm font-semibold text-muted-foreground">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 Dietary Preferences
               </h3>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -267,8 +267,7 @@ export default function ProfilePage() {
                   dietary.map((pref) => (
                     <Badge
                       key={pref}
-                      variant="secondary"
-                      className="rounded-full"
+                      className="rounded-full bg-accent text-foreground hover:bg-accent/80"
                     >
                       {formatDietaryLabel(pref)}
                     </Badge>
@@ -287,7 +286,7 @@ export default function ProfilePage() {
               transition={{ delay: 0.15 }}
               className="mt-4"
             >
-              <h3 className="text-sm font-semibold text-muted-foreground">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 Favorite Cuisines
               </h3>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -296,7 +295,7 @@ export default function ProfilePage() {
                     <Badge
                       key={cuisine}
                       variant="outline"
-                      className="rounded-full"
+                      className="rounded-full border-border bg-surface text-foreground hover:bg-surface-raised"
                     >
                       {formatCuisineLabel(cuisine)}
                     </Badge>
@@ -323,15 +322,15 @@ export default function ProfilePage() {
           {menuItems.map((item) => (
             <button
               key={item.label}
-              className="flex w-full items-center justify-between rounded-xl px-3 py-3.5 transition-colors hover:bg-muted"
+              className="flex w-full items-center justify-between rounded-lg px-4 py-3.5 transition-colors hover:bg-surface active:bg-muted"
             >
               <div className="flex items-center gap-3">
-                <item.icon className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm font-medium">{item.label}</span>
+                <item.icon className="h-5 w-5 text-primary" />
+                <span className="text-sm font-medium text-foreground">{item.label}</span>
               </div>
               <div className="flex items-center gap-2">
                 {item.badge && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground font-medium">
                     {item.badge}
                   </span>
                 )}
@@ -342,5 +341,5 @@ export default function ProfilePage() {
         </motion.div>
       </div>
     </div>
-  );
+  )
 }

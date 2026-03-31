@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,6 +42,7 @@ import { IngredientActionMenu } from "@/components/recipe/ingredient-action-menu
 import { AddIngredientSheet } from "@/components/recipe/add-ingredient-sheet";
 import { RecipeOwnerBadge } from "@/components/recipe/recipe-owner-badge";
 import { getRecipeById } from "@/data/mock-data";
+import type { Recipe } from "@/data/mock-data";
 import { transformRecipe } from "@/lib/engines/transformation";
 import { computeTrustMetrics } from "@/lib/engines/transformation/trust";
 import type { TransformationWarning } from "@/lib/engines/types";
@@ -57,10 +58,45 @@ const recipeImageMap: Record<string, string> = {
 export default function RecipeDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const recipe = getRecipeById(params.id as string);
+  const slug = params.id as string;
+
+  // Try mock data first (instant), fall back to API for imported recipes
+  const mockRecipe = getRecipeById(slug);
+  const [apiRecipe, setApiRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(!mockRecipe);
+
+  useEffect(() => {
+    if (mockRecipe) return; // already have it from mock data
+    fetch(`/api/recipes/${encodeURIComponent(slug)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.recipe) setApiRecipe(data.recipe);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [slug, mockRecipe]);
+
+  const recipe = mockRecipe ?? apiRecipe;
+
   const [servings, setServings] = useState(recipe?.servings ?? 4);
   const [isSaved, setIsSaved] = useState(false);
   const [activeAction, setActiveAction] = useState<string | undefined>();
+
+  // Sync servings when recipe loads async
+  useEffect(() => {
+    if (recipe) setServings(recipe.servings);
+  }, [recipe]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <ChefHat className="mx-auto h-12 w-12 text-muted-foreground/30 animate-pulse" />
+          <p className="mt-3 text-muted-foreground">Loading recipe...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!recipe) {
     return (

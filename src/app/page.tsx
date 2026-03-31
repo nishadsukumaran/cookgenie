@@ -19,7 +19,6 @@ import {
 import { motion } from "framer-motion";
 import { SearchBar } from "@/components/search/search-bar";
 import { CategoryChip } from "@/components/search/category-chip";
-import { Button } from "@/components/ui/button";
 import { categories, recipes } from "@/data/mock-data";
 import type { Recipe } from "@/data/mock-data";
 
@@ -63,18 +62,6 @@ const powers = [
   },
 ];
 
-const cuisineImageMap: Record<string, string> = {
-  Indian: "/images/butter-chicken.jpg",
-  Arabic: "/images/machboos.jpg",
-  "Middle Eastern": "/images/shakshuka.jpg",
-};
-
-function getRecipeImage(recipe: Recipe): string {
-  if (recipe.image && !recipe.image.startsWith("/images/placeholder")) {
-    return recipe.image;
-  }
-  return cuisineImageMap[recipe.cuisine] ?? "/images/butter-chicken.jpg";
-}
 
 interface ActiveSession {
   id: string;
@@ -100,116 +87,43 @@ export default function HomePage() {
   }, []);
 
   const topPicks = recipes.slice(0, 3);
-  const featuredRecipe = recipes[0];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden"
-      >
-        {/* Hero image with overlay */}
-        <div className="relative h-[320px] md:h-[400px] w-full">
-          <Image
-            src={getRecipeImage(featuredRecipe)}
-            alt="Featured recipe"
-            fill
-            sizes="100vw"
-            priority
-            loading="eager"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 image-overlay-bottom" />
-          {/* Dark top scrim for logo readability */}
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/50 to-transparent" />
-
+      {/* Header + Search */}
+      <section className="border-b border-border bg-background">
+        <div className="mx-auto max-w-lg px-4 pt-5 pb-4">
           {/* Logo */}
-          <div className="absolute top-0 inset-x-0 px-4 pt-5">
-            <div className="mx-auto max-w-lg flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg">
-                  <ChefHat className="h-4.5 w-4.5 text-primary-foreground" />
-                </div>
-                <span className="font-heading text-xl text-white">CookGenie</span>
-              </Link>
-              <button
-                onClick={() => router.push("/search")}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors"
-                aria-label="Search"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg">
+                <ChefHat className="h-4.5 w-4.5 text-primary-foreground" />
+              </div>
+              <span className="font-heading text-xl">CookGenie</span>
+            </Link>
           </div>
 
-          {/* Hero content over image */}
-          <div className="absolute bottom-0 inset-x-0 px-4 pb-5">
-            <div className="mx-auto max-w-lg">
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-1">
-                  AI Top Pick
-                </p>
-                <h2 className="font-heading text-2xl text-white leading-tight text-balance">
-                  {featuredRecipe.title}
-                </h2>
-                <p className="mt-1 text-sm text-white/80 line-clamp-1">
-                  {featuredRecipe.description}
-                </p>
-                <div className="mt-3 flex items-center gap-3">
-                  <Button
-                    size="sm"
-                    onClick={() => router.push(`/recipe/${featuredRecipe.id}`)}
-                    className="h-9 rounded-full px-4 text-xs font-semibold shadow-lg pulse-cta"
-                  >
-                    View Recipe
-                    <ArrowRight className="ml-1.5 h-3 w-3" />
-                  </Button>
-                  <div className="flex items-center gap-2 text-white/80 text-xs">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {featuredRecipe.cookingTime}m
-                    </span>
-                    <span className="text-white/40">·</span>
-                    <span>{featuredRecipe.calories} cal</span>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
+          {/* Search bar */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              router.push(
+                searchQuery
+                  ? `/search?q=${encodeURIComponent(searchQuery)}`
+                  : "/search"
+              );
+            }}
+          >
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search recipes, cuisines, ingredients..."
+            />
+          </form>
 
-        {/* Search bar — floats below hero */}
-        <div className="relative -mt-5 mx-auto max-w-lg px-4 z-10">
-          <div className="rounded-2xl bg-card border border-border shadow-float p-1.5">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                router.push(
-                  searchQuery
-                    ? `/search?q=${encodeURIComponent(searchQuery)}`
-                    : "/search"
-                );
-              }}
-            >
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search recipes, cuisines, ingredients..."
-              />
-            </form>
-          </div>
-        </div>
-
-        {/* Category chips */}
-        <div className="mt-3 pb-1 px-4">
-          <div className="mx-auto max-w-lg flex gap-2 overflow-x-auto hide-scrollbar">
+          {/* Category chips */}
+          <div className="mt-3 flex gap-2 overflow-x-auto hide-scrollbar">
             {categories.map((cat) => (
               <CategoryChip
                 key={cat.id}
@@ -222,7 +136,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </motion.section>
+      </section>
 
       <div className="mx-auto max-w-lg px-4">
         {/* Resume Cooking */}

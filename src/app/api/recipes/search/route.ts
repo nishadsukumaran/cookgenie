@@ -65,7 +65,12 @@ export async function POST(req: Request) {
   let parseError: string | undefined;
 
   try {
-    const raw = JSON.parse(aiResult.content);
+    // Strip markdown code fences if present (AI sometimes wraps JSON in ```json ... ```)
+    let jsonStr = aiResult.content.trim();
+    const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) jsonStr = fenceMatch[1].trim();
+
+    const raw = JSON.parse(jsonStr);
     const arr = Array.isArray(raw) ? raw : [raw];
 
     candidates = arr.map((r: Record<string, unknown>) => ({
@@ -99,6 +104,7 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     parseError = err instanceof Error ? err.message : "Failed to parse AI response";
+    console.error("[POST /api/recipes/search] JSON parse failed:", parseError, "Raw content:", aiResult.content.slice(0, 500));
     trace.addFlag("json-parse-failed");
     trace.addStage("json-parse", "FAILED", 0, {
       error: parseError,

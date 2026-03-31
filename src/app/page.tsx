@@ -17,7 +17,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { SearchInput } from "@/components/search/search-input";
+import { SearchBar } from "@/components/search/search-bar";
 import { CategoryChip } from "@/components/search/category-chip";
 import { Button } from "@/components/ui/button";
 import { categories, recipes } from "@/data/mock-data";
@@ -188,15 +188,22 @@ export default function HomePage() {
         {/* Search bar — floats below hero */}
         <div className="relative -mt-5 mx-auto max-w-lg px-4 z-10">
           <div className="rounded-2xl bg-card border border-border shadow-float p-1.5">
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onSubmit={() =>
-                searchQuery &&
-                router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
-              }
-              placeholder="Search recipes, cuisines, ingredients..."
-            />
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                router.push(
+                  searchQuery
+                    ? `/search?q=${encodeURIComponent(searchQuery)}`
+                    : "/search"
+                );
+              }}
+            >
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search recipes, cuisines, ingredients..."
+              />
+            </form>
           </div>
         </div>
 

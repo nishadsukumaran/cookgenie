@@ -65,12 +65,14 @@ export function ImportPreviewSheet({
 }: ImportPreviewSheetProps) {
   const [importing, setImporting] = useState(false);
   const [imported, setImported] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showAllSteps, setShowAllSteps] = useState(false);
 
   function handleOpenChange(isOpen: boolean) {
     onOpenChange(isOpen);
     if (!isOpen) {
       setImported(false);
+      setError(null);
       setShowAllSteps(false);
     }
   }
@@ -78,6 +80,7 @@ export function ImportPreviewSheet({
   async function handleImport() {
     if (!candidate) return;
     setImporting(true);
+    setError(null);
     try {
       const res = await fetch("/api/recipes/import", {
         method: "POST",
@@ -91,9 +94,11 @@ export function ImportPreviewSheet({
         setTimeout(() => {
           onImported?.(data);
         }, 1200);
+      } else {
+        setError("Import failed. Please try again.");
       }
     } catch {
-      // silently fail
+      setError("Network error. Please try again.");
     } finally {
       setImporting(false);
     }
@@ -245,6 +250,9 @@ export function ImportPreviewSheet({
 
         {/* Fixed bottom import button */}
         <div className="absolute inset-x-0 bottom-0 border-t border-border bg-popover p-4">
+          {error && (
+            <p className="mb-2 text-center text-xs text-red-600">{error}</p>
+          )}
           <Button
             onClick={handleImport}
             disabled={importing || imported}

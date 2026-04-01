@@ -52,6 +52,11 @@ export async function POST(req: Request) {
       );
     }
 
+    const VALID_DIFFICULTIES = ["Easy", "Medium", "Hard"];
+    const safeDifficulty = VALID_DIFFICULTIES.includes(difficulty ?? "")
+      ? difficulty!
+      : "Medium";
+
     const db = getDb();
     // Add random suffix to avoid slug collisions on repeat imports
     const baseSlug = slugify(title);
@@ -68,7 +73,7 @@ export async function POST(req: Request) {
         cuisine: cuisine ?? "International",
         cookingTime: cookingTime ?? 0,
         prepTime: prepTime ?? 0,
-        difficulty: difficulty ?? "Medium",
+        difficulty: safeDifficulty,
         servings: servings ?? 4,
         calories: calories ?? null,
         tags: tags ?? [],

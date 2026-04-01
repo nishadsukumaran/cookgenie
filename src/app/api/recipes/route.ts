@@ -94,6 +94,21 @@ export async function GET(request: NextRequest) {
     const difficulty = params.get("difficulty")?.trim();
     const dietary = params.get("dietary")?.trim();
 
+    // Validate enum inputs
+    const VALID_DIFFICULTIES = ["Easy", "Medium", "Hard"];
+    const VALID_DIETARY = ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free"];
+    const VALID_TIMES = ["under-30", "30-60", "60-plus"];
+
+    if (difficulty && !VALID_DIFFICULTIES.includes(difficulty)) {
+      return Response.json({ recipes: [] });
+    }
+    if (dietary && !VALID_DIETARY.includes(dietary)) {
+      return Response.json({ recipes: [] });
+    }
+    if (time && !VALID_TIMES.includes(time)) {
+      return Response.json({ recipes: [] });
+    }
+
     // ─── Build WHERE conditions ───────────────────────
     const conditions = [];
 

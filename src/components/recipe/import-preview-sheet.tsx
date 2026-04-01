@@ -69,6 +69,8 @@ export function ImportPreviewSheet({
   const [showAllSteps, setShowAllSteps] = useState(false);
 
   function handleOpenChange(isOpen: boolean) {
+    // Don't allow closing while import is in progress
+    if (!isOpen && importing) return;
     onOpenChange(isOpen);
     if (!isOpen) {
       setImported(false);

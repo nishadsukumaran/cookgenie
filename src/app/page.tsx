@@ -18,7 +18,7 @@ import {
 import { motion } from "framer-motion";
 import { SearchBar } from "@/components/search/search-bar";
 import { CategoryChip } from "@/components/search/category-chip";
-import { categories, recipes } from "@/data/mock-data";
+import { categories } from "@/data/mock-data";
 import type { Recipe } from "@/data/mock-data";
 
 const stagger = {
@@ -77,15 +77,21 @@ export default function HomePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
+  const [topPicks, setTopPicks] = useState<Recipe[]>([]);
+  const [topPicksLoading, setTopPicksLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/sessions/active")
       .then((r) => r.json())
       .then((data) => setActiveSessions(data.sessions ?? []))
       .catch(() => {});
-  }, []);
 
-  const topPicks = recipes.slice(0, 3);
+    fetch("/api/recipes")
+      .then((r) => r.json())
+      .then((data) => setTopPicks((data.recipes ?? []).slice(0, 3)))
+      .catch(() => {})
+      .finally(() => setTopPicksLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -239,11 +245,19 @@ export default function HomePage() {
           </motion.div>
 
           <div className="space-y-3">
-            {topPicks.map((recipe, index) => (
-              <motion.div key={recipe.id} variants={fadeUp}>
-                <FeaturedRecipeCard recipe={recipe} rank={index + 1} />
-              </motion.div>
-            ))}
+            {topPicksLoading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-24 rounded-2xl border border-border bg-card animate-pulse" />
+                ))}
+              </>
+            ) : topPicks.length > 0 ? (
+              topPicks.map((recipe, index) => (
+                <motion.div key={recipe.id} variants={fadeUp}>
+                  <FeaturedRecipeCard recipe={recipe} rank={index + 1} />
+                </motion.div>
+              ))
+            ) : null}
           </div>
         </motion.section>
 
@@ -294,19 +308,22 @@ export default function HomePage() {
   );
 }
 
+const imageMap: Record<string, string> = {
+  "butter-chicken": "/images/butter-chicken.jpg",
+  "chicken-biryani": "/images/chicken-biryani.jpg",
+  "paneer-butter-masala": "/images/paneer-butter-masala.jpg",
+  shakshuka: "/images/shakshuka.jpg",
+  machboos: "/images/machboos.jpg",
+};
+const cuisineImageFallback: Record<string, string> = {
+  Indian: "/images/butter-chicken.jpg",
+  Arabic: "/images/machboos.jpg",
+  "Middle Eastern": "/images/shakshuka.jpg",
+};
+
 function FeaturedRecipeCard({ recipe, rank }: { recipe: Recipe; rank: number }) {
   const router = useRouter();
-  const image = recipe.id === "butter-chicken"
-    ? "/images/butter-chicken.jpg"
-    : recipe.id === "chicken-biryani"
-      ? "/images/chicken-biryani.jpg"
-      : recipe.id === "paneer-butter-masala"
-        ? "/images/paneer-butter-masala.jpg"
-        : recipe.id === "shakshuka"
-          ? "/images/shakshuka.jpg"
-          : recipe.id === "machboos"
-            ? "/images/machboos.jpg"
-            : "/images/butter-chicken.jpg";
+  const image = imageMap[recipe.id] ?? cuisineImageFallback[recipe.cuisine] ?? "/images/butter-chicken.jpg";
 
   return (
     <motion.button

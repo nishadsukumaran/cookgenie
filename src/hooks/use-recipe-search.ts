@@ -66,9 +66,10 @@ export function useRecipeSearch(initialQuery = ""): UseRecipeSearchReturn {
   // ─── Local DB Search (debounced) ──────────────────
 
   useEffect(() => {
-    // Reset AI results when query or filters change
+    // Reset all results when query or filters change
     setAiCandidates([]);
     setAiSearched(false);
+    setLocalLoading(true);  // Show skeleton immediately, not stale results
 
     const timer = setTimeout(async () => {
       // Cancel previous request
@@ -115,7 +116,9 @@ export function useRecipeSearch(initialQuery = ""): UseRecipeSearchReturn {
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [query, filters, hasActiveFilters]);
+    // hasActiveFilters intentionally omitted — derived from filters
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, filters]);
 
   // ─── AI Search (manual trigger) ───────────────────
 

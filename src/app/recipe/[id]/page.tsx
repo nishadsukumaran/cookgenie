@@ -78,28 +78,29 @@ export default function RecipeDetailPage() {
 
   const recipe = mockRecipe ?? apiRecipe;
 
-  // Key state on recipe ID so it resets when recipe loads
-  const recipeId = recipe?.id ?? null;
   const [servings, setServings] = useState(recipe?.servings ?? 4);
   const [isSaved, setIsSaved] = useState(false);
   const [activeAction, setActiveAction] = useState<string | undefined>();
-  const [initializedFor, setInitializedFor] = useState<string | null>(recipeId);
 
-  // When recipe first loads (null → loaded), reset servings to match
-  if (recipeId && initializedFor !== recipeId) {
-    setServings(recipe!.servings);
-    setInitializedFor(recipeId);
-  }
+  // Sync servings when async recipe first loads (API recipes only)
+  const recipeServings = recipe?.servings;
+  useEffect(() => {
+    if (recipeServings != null) {
+      setServings(recipeServings);
+    }
+  }, [recipeServings]);
 
   // All hooks must be called before early returns (React rules of hooks)
+  const recipeIngredients = recipe?.ingredients;
+  const recipeCalories = recipe?.calories ?? 0;
+
   const transformation = useMemo(
     () => {
-      const ings = recipe?.ingredients ?? [];
-      const srvs = recipe?.servings ?? 4;
-      const cals = recipe?.calories ?? 0;
-      return transformRecipe(ings, srvs, cals, { targetServings: servings });
+      const ings = recipeIngredients ?? [];
+      const srvs = recipeServings ?? 4;
+      return transformRecipe(ings, srvs, recipeCalories, { targetServings: servings });
     },
-    [recipe, servings]
+    [recipeIngredients, recipeServings, recipeCalories, servings]
   );
 
   const isModified = recipe ? servings !== recipe.servings : false;
@@ -107,18 +108,17 @@ export default function RecipeDetailPage() {
 
   const trustMetrics = useMemo(
     () => {
-      const ings = recipe?.ingredients ?? [];
-      const cals = recipe?.calories ?? 0;
+      const ings = recipeIngredients ?? [];
       return computeTrustMetrics(
         ings,
         transformation.ingredients,
-        cals,
+        recipeCalories,
         transformation.calories,
         transformation.warnings,
         transformationType
       );
     },
-    [recipe, transformation, transformationType]
+    [recipeIngredients, recipeCalories, transformation, transformationType]
   );
 
   if (loading) {

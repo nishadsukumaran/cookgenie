@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Bookmark, Layers, ShieldCheck, Clock, Search, X } from 'lucide-react'
+import { Bookmark, Layers, ShieldCheck, Clock, Search } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { AppHeader } from '@/components/layout/app-header'
 import { RecipeCard } from '@/components/recipe/recipe-card'
 import { EmptyState } from '@/components/shared/empty-state'

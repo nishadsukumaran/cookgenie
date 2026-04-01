@@ -37,7 +37,7 @@ export async function GET() {
     id: r.slug,
     title: r.title,
     description: r.description ?? "",
-    image: r.imageUrl ?? "",
+    image: r.imageUrl || `/images/${r.slug}.jpg`,
     cuisine: r.cuisine,
     cookingTime: r.cookingTime,
     prepTime: r.prepTime,
@@ -47,6 +47,9 @@ export async function GET() {
     calories: r.calories ?? 0,
     tags: r.tags ?? [],
     aiSummary: r.aiSummary ?? "",
+    ingredients: [],
+    steps: [],
+    substitutions: [],
   }));
 
   return NextResponse.json({ savedRecipeIds, savedRecipes });

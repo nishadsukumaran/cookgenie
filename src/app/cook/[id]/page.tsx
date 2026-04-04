@@ -16,11 +16,32 @@ import {
 import { Button } from "@/components/ui/button";
 import { CookTimer } from "@/components/cook/cook-timer";
 import { getRecipeById } from "@/data/mock-data";
+import { analyzeStepTiming } from "@/lib/engines/cooking/step-analysis";
+import type { Recipe } from "@/data/mock-data";
 
 export default function CookModePage() {
   const params = useParams();
   const router = useRouter();
-  const recipe = getRecipeById(params.id as string);
+  const slug = params.id as string;
+
+  // Try mock data first (instant), fall back to API for imported recipes
+  const mockRecipe = getRecipeById(slug);
+  const [apiRecipe, setApiRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(!mockRecipe);
+
+  useEffect(() => {
+    if (mockRecipe) return;
+    fetch(`/api/recipes/${encodeURIComponent(slug)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.recipe) setApiRecipe(data.recipe);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [slug, mockRecipe]);
+
+  const recipe = mockRecipe ?? apiRecipe;
+
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [direction, setDirection] = useState(0);
@@ -82,6 +103,14 @@ export default function CookModePage() {
     }).catch(() => {});
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground animate-pulse">Loading recipe...</p>
+      </div>
+    );
+  }
+
   if (!recipe) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -95,6 +124,9 @@ export default function CookModePage() {
   const progress = ((currentStep + 1) / totalSteps) * 100;
   const isLastStep = currentStep === totalSteps - 1;
   const isFirstStep = currentStep === 0;
+  const timeline = analyzeStepTiming(recipe.steps);
+  const currentTiming = timeline.steps.find((t) => t.stepNumber === step?.number);
+  const parallelGroup = timeline.parallelGroups.find((g) => g.steps.includes(step?.number));
 
   function goNext() {
     if (!isLastStep) {
@@ -162,6 +194,11 @@ export default function CookModePage() {
           <p className="text-sm font-semibold">
             Step {currentStep + 1} of {totalSteps}
           </p>
+          {timeline.timeSaved > 0 && (
+            <p className="text-[10px] text-sky-600 font-medium">
+              ~{timeline.optimizedTotal}min total (saves {timeline.timeSaved}min)
+            </p>
+          )}
         </div>
         <div className="flex gap-1">
           <button
@@ -273,6 +310,19 @@ export default function CookModePage() {
                 <div className="flex items-start gap-2.5">
                   <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   <p className="text-sm text-accent-foreground">{step.tip}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Parallel step hint */}
+            {parallelGroup && currentTiming?.isPassive && (
+              <div className="mt-4 mx-auto max-w-sm rounded-2xl bg-sky-50 border border-sky-200 p-3.5">
+                <div className="flex items-start gap-2.5">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+                  <div>
+                    <p className="text-xs font-semibold text-sky-700">Time-saving tip</p>
+                    <p className="mt-0.5 text-xs text-sky-600 leading-relaxed">{parallelGroup.reason}</p>
+                  </div>
                 </div>
               </div>
             )}

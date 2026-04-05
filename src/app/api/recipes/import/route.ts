@@ -171,13 +171,16 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ id: recipe.id, slug: recipe.slug, title });
   } catch (error) {
-    console.error("[POST /api/recipes/import] Error details:", {
+    // Log full error details for debugging
+    const errorDetails = {
       message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
-      error,
-    });
+      code: error instanceof Error && "code" in error ? (error as any).code : undefined,
+      detail: error instanceof Error && "detail" in error ? (error as any).detail : undefined,
+    };
+    console.error("[POST /api/recipes/import] Database error:", JSON.stringify(errorDetails, null, 2));
     return NextResponse.json(
-      { error: "Failed to import recipe" },
+      { error: "Failed to import recipe", details: errorDetails.message },
       { status: 500 },
     );
   }

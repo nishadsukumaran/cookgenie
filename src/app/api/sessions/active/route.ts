@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveSessions } from "@/lib/db/queries";
 import { getRecipeById } from "@/data/mock-data";
-
-const DEV_USER = "dev-user";
+import { getUserId } from "@/lib/auth/session";
 
 export interface ActiveSessionResponse {
   id: string;
@@ -17,7 +16,12 @@ export interface ActiveSessionResponse {
 
 export async function GET() {
   try {
-    const sessions = await getActiveSessions(DEV_USER);
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ sessions: [] });
+    }
+
+    const sessions = await getActiveSessions(userId);
 
     const enriched: ActiveSessionResponse[] = sessions.map((s) => {
       // Resolve recipe slug from UUID — check mock data first

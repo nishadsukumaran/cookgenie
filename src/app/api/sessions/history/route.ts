@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCompletedSessions, getCookingStats } from "@/lib/db/queries";
 import { getRecipeById } from "@/data/mock-data";
-
-const DEV_USER = "dev-user";
+import { getUserId } from "@/lib/auth/session";
 
 export interface HistorySession {
   id: string;
@@ -27,9 +26,17 @@ export interface HistoryResponse {
 
 export async function GET() {
   try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({
+        sessions: [],
+        stats: { totalCompleted: 0, totalCookingMinutes: 0, mostCookedRecipe: null },
+      });
+    }
+
     const [sessions, stats] = await Promise.all([
-      getCompletedSessions(DEV_USER),
-      getCookingStats(DEV_USER),
+      getCompletedSessions(userId),
+      getCookingStats(userId),
     ]);
 
     // Enrich sessions with recipe titles and computed duration

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node *)",
+      "Bash(copy *)",
+      "Bash(npm install *)",
+      "Bash(npm *)",
+      "Bash(taskkill *)",
+      "Bash(move *)",
+      "Bash(git commit *)"
+    ]
+  },
+  "$version": 3
+}

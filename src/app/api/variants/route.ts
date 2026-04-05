@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { saveVariant, getUserVariants, getVariantsForRecipe } from "@/lib/db/queries";
-
-const DEV_USER = "dev-user";
+import { getUserId } from "@/lib/auth/session";
 
 interface SaveVariantRequest {
   baseRecipeId: string;
@@ -25,6 +24,11 @@ interface SaveVariantRequest {
 }
 
 export async function POST(req: Request) {
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body: SaveVariantRequest = await req.json();
 
   if (!body.baseRecipeId || !body.name) {
@@ -32,7 +36,7 @@ export async function POST(req: Request) {
   }
 
   const id = await saveVariant({
-    userId: DEV_USER,
+    userId,
     baseRecipeId: body.baseRecipeId,
     name: body.name,
     servings: body.servings,
@@ -45,12 +49,17 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ variants: [] });
+  }
+
   const url = new URL(req.url);
   const recipeId = url.searchParams.get("recipeId");
 
   const variants = recipeId
-    ? await getVariantsForRecipe(DEV_USER, recipeId)
-    : await getUserVariants(DEV_USER);
+    ? await getVariantsForRecipe(userId, recipeId)
+    : await getUserVariants(userId);
 
   return NextResponse.json({ variants });
 }

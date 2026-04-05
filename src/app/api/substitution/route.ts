@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { findSubstitutesFor } from "@/lib/engines/substitution";
 import { ai } from "@/lib/ai";
 import { logAiInteraction, getPreferences } from "@/lib/db/queries";
+import { getUserId } from "@/lib/auth/session";
 import { createTrace, isDev } from "@/lib/debug/types";
 import { adjustConfidence, derivePersonalizationBias, personalizationContext } from "@/lib/engines/learning";
 
@@ -81,7 +82,8 @@ export async function POST(req: Request) {
 
   // ─── Learning Layer ──────────────────────────────
   try {
-    const prefs = await getPreferences("dev-user").catch(() => null);
+    const userId = await getUserId();
+    const prefs = userId ? await getPreferences(userId).catch(() => null) : null;
     const bias = derivePersonalizationBias(prefs);
     const adjusted = await adjustConfidence(result.best?.score ?? 50, "substitution", bias);
     trace.addStage("learning", "Confidence adjustment + personalization", 0, {

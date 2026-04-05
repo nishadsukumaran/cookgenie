@@ -1,17 +1,25 @@
 import { NextResponse } from "next/server";
 import { getPreferences, upsertPreferences } from "@/lib/db/queries";
-
-const DEV_USER = "dev-user";
+import { getUserId } from "@/lib/auth/session";
 
 export async function GET() {
-  const prefs = await getPreferences(DEV_USER);
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ preferences: null });
+  }
+  const prefs = await getPreferences(userId);
   return NextResponse.json({ preferences: prefs });
 }
 
 export async function POST(req: Request) {
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json();
 
-  const id = await upsertPreferences(DEV_USER, {
+  const id = await upsertPreferences(userId, {
     spicePreference: body.spicePreference,
     dietary: body.dietary,
     cuisines: body.cuisines,

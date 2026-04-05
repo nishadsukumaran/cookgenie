@@ -35,7 +35,7 @@ export function RecipeCard({
         >
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-muted">
             <Image
-              src={recipe.image || "/images/butter-chicken.jpg"}
+              src={recipe.image || "/images/generic-recipe.jpg"}
               alt={recipe.title}
               fill
               sizes="80px"
@@ -74,7 +74,7 @@ export function RecipeCard({
         >
           <div className="relative h-48 w-full bg-surface overflow-hidden">
             <Image
-              src={recipe.image || "/images/butter-chicken.jpg"}
+              src={recipe.image || "/images/generic-recipe.jpg"}
               alt={recipe.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -127,7 +127,7 @@ export function RecipeCard({
       >
         <div className="relative h-40 w-full bg-surface overflow-hidden">
           <Image
-            src={recipe.image || "/images/butter-chicken.jpg"}
+            src={recipe.image || "/images/generic-recipe.jpg"}
             alt={recipe.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

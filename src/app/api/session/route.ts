@@ -4,6 +4,7 @@ import {
   updateSessionStep,
   completeSession,
 } from "@/lib/db/queries";
+import { getUserId } from "@/lib/auth/session";
 
 interface SessionRequest {
   action: "start" | "step" | "complete";
@@ -15,9 +16,11 @@ interface SessionRequest {
   transformations?: Record<string, unknown>;
 }
 
-const ANONYMOUS_USER = "anonymous";
-
 export async function POST(req: Request) {
+  const userId = await getUserId();
+  // If not logged in, use anonymous user
+  const effectiveUserId = userId ?? "anonymous";
+
   const body: SessionRequest = await req.json();
 
   switch (body.action) {
@@ -29,7 +32,7 @@ export async function POST(req: Request) {
         );
       }
       const sessionId = await createCookingSession({
-        userId: ANONYMOUS_USER,
+        userId: effectiveUserId,
         recipeId: body.recipeId,
         totalSteps: body.totalSteps,
         servingsUsed: body.servings,

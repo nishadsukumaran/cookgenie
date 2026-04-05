@@ -2,11 +2,14 @@
  * CookGenie database schema — Drizzle ORM + Neon PostgreSQL.
  *
  * Tables implemented in this phase:
+ * - users, user_preferences
  * - recipes, recipe_ingredients, recipe_steps
  * - saved_recipes, cooking_sessions
+ * - recipe_variants
  * - substitution_knowledge
  * - ai_interactions (minimal)
  * - rescue_queries
+ * - user_feedback
  */
 
 import {
@@ -22,6 +25,110 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+
+// ═══════════════════════════════════════════
+// USERS
+// ═══════════════════════════════════════════
+
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull().unique(),
+    name: text("name").notNull(),
+    emailVerified: timestamp("email_verified", { withTimezone: true }),
+    googleId: text("google_id").unique(),
+    avatarUrl: text("avatar_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index("idx_users_email").on(table.email),
+    index("idx_users_google_id").on(table.googleId),
+  ]
+);
+
+export const usersRelations = relations(users, ({ many }) => ({
+  preferences: many(userPreferences),
+  savedRecipes: many(savedRecipes),
+  cookingSessions: many(cookingSessions),
+  variants: many(recipeVariants),
+  feedback: many(userFeedback),
+  aiInteractions: many(aiInteractions),
+  rescueQueries: many(rescueQueries),
+  accounts: many(accounts),
+  sessions: many(sessions),
+}));
+
+// ═══════════════════════════════════════════
+// AUTH.JS — Accounts, Sessions, VerificationTokens
+// ═══════════════════════════════════════════
+
+export const accounts = pgTable(
+  "accounts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(), // 'oauth' | 'oidc' | 'email' | 'webauthn'
+    provider: text("provider").notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (table) => [
+    index("idx_accounts_provider").on(table.provider, table.providerAccountId),
+    uniqueIndex("idx_accounts_unique").on(table.provider, table.providerAccountId),
+  ]
+);
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionToken: text("session_token").notNull().unique(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expires: timestamp("expires", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("idx_sessions_user").on(table.userId),
+    uniqueIndex("idx_sessions_token").on(table.sessionToken),
+  ]
+);
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull().unique(),
+    expires: timestamp("expires", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    uniqueIndex("idx_vt_identifier_token").on(table.identifier, table.token),
+  ]
+);
 
 // ═══════════════════════════════════════════
 // RECIPES
@@ -151,6 +258,10 @@ export const savedRecipes = pgTable(
 );
 
 export const savedRecipesRelations = relations(savedRecipes, ({ one }) => ({
+  user: one(users, {
+    fields: [savedRecipes.userId],
+    references: [users.id],
+  }),
   recipe: one(recipes, {
     fields: [savedRecipes.recipeId],
     references: [recipes.id],
@@ -181,14 +292,18 @@ export const cookingSessions = pgTable(
     modificationsApplied: jsonb("modifications_applied").default([]),
   },
   (table) => [
-    index("idx_sessions_user").on(table.userId),
-    index("idx_sessions_status").on(table.status),
+    index("idx_cooking_sessions_user").on(table.userId),
+    index("idx_cooking_sessions_status").on(table.status),
   ]
 );
 
 export const cookingSessionsRelations = relations(
   cookingSessions,
   ({ one }) => ({
+    user: one(users, {
+      fields: [cookingSessions.userId],
+      references: [users.id],
+    }),
     recipe: one(recipes, {
       fields: [cookingSessions.recipeId],
       references: [recipes.id],
@@ -352,6 +467,10 @@ export const recipeVariants = pgTable(
 );
 
 export const recipeVariantsRelations = relations(recipeVariants, ({ one }) => ({
+  user: one(users, {
+    fields: [recipeVariants.userId],
+    references: [users.id],
+  }),
   baseRecipe: one(recipes, {
     fields: [recipeVariants.baseRecipeId],
     references: [recipes.id],
@@ -387,7 +506,8 @@ export const userPreferences = pgTable(
   "user_preferences",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().unique(),
+    userId: uuid("user_id").notNull().unique()
+      .references(() => users.id, { onDelete: "cascade" }),
     spicePreference: text("spice_preference").default("medium"), // 'mild' | 'medium' | 'hot' | 'very_hot'
     dietary: text("dietary").array().default([]),                 // ['no-peanuts', 'vegetarian', 'gluten-free']
     cuisines: text("cuisines").array().default([]),               // ['indian', 'arabic', 'mediterranean']
@@ -401,3 +521,10 @@ export const userPreferences = pgTable(
     index("idx_prefs_user").on(table.userId),
   ]
 );
+
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPreferences.userId],
+    references: [users.id],
+  }),
+}));

@@ -34,7 +34,7 @@ export async function GET(
       id: recipe.slug,
       title: recipe.title,
       description: recipe.description ?? "",
-      image: recipe.imageUrl ?? `/images/${recipe.slug}.jpg`,
+      image: recipe.imageUrl ?? "/images/generic-recipe.jpg",
       cuisine: recipe.cuisine,
       cookingTime: recipe.cookingTime,
       prepTime: recipe.prepTime,

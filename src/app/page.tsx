@@ -316,14 +316,14 @@ const imageMap: Record<string, string> = {
   machboos: "/images/machboos.jpg",
 };
 const cuisineImageFallback: Record<string, string> = {
-  Indian: "/images/butter-chicken.jpg",
-  Arabic: "/images/machboos.jpg",
-  "Middle Eastern": "/images/shakshuka.jpg",
+  Indian: "/images/generic-recipe.jpg",
+  Arabic: "/images/generic-recipe.jpg",
+  "Middle Eastern": "/images/generic-recipe.jpg",
 };
 
 function FeaturedRecipeCard({ recipe, rank }: { recipe: Recipe; rank: number }) {
   const router = useRouter();
-  const image = imageMap[recipe.id] ?? cuisineImageFallback[recipe.cuisine] ?? "/images/butter-chicken.jpg";
+  const image = imageMap[recipe.id] ?? cuisineImageFallback[recipe.cuisine] ?? "/images/generic-recipe.jpg";
 
   return (
     <motion.button

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Serif_Display, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ProjectTracker } from "@/components/debug/project-tracker";
@@ -66,12 +67,14 @@ export default function RootLayout({
       className={`${headingFont.variable} ${bodyFont.variable} ${monoFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <TooltipProvider>
-          <main className="flex-1 pb-20 md:pb-0">{children}</main>
-          <BottomNav />
-          <ProjectTracker />
-          <AnalyticsPanel />
-        </TooltipProvider>
+        <SessionProvider>
+          <TooltipProvider>
+            <main className="flex-1 pb-20 md:pb-0">{children}</main>
+            <BottomNav />
+            <ProjectTracker />
+            <AnalyticsPanel />
+          </TooltipProvider>
+        </SessionProvider>
       </body>
     </html>
   );

@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useSession, signIn, signOut } from "next-auth/react"
 import { motion } from "framer-motion"
 import {
   ChefHat,
@@ -11,11 +13,15 @@ import {
   ChevronRight,
   Flame,
   Ruler,
+  Loader2,
+  LogIn,
+  LogOut,
 } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 import { AppHeader } from "@/components/layout/app-header"
 
 interface UserPreferences {
@@ -100,10 +106,16 @@ function PreferencesSkeleton() {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const isLoggedIn = status === "authenticated";
+
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     async function fetchProfileData() {
       try {
         const [prefsRes, sessionsRes, savedRes] = await Promise.all([
@@ -134,11 +146,71 @@ export default function ProfilePage() {
     }
 
     fetchProfileData();
-  }, []);
+  }, [isLoggedIn]);
+
+  // Loading auth state
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Not logged in — show login prompt
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <AppHeader title="Profile" />
+        <div className="flex flex-col items-center justify-center px-4 pt-32">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-sm text-center space-y-6"
+          >
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <ChefHat className="h-10 w-10 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-heading font-bold">Sign in to your account</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Save recipes, track sessions, and sync your preferences across devices.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
+              className="gap-2"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign in with Google
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   const prefs = data?.preferences;
   const dietary = prefs?.dietary ?? [];
   const cuisines = prefs?.cuisines ?? [];
+  const userName = session?.user?.name ?? "Home Chef";
+  const userEmail = session?.user?.email ?? "";
+  const userImage = session?.user?.image ?? null;
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  // Format "Cooking since" from user creation
+  const cookingSince = (session?.user as any)?.createdAt
+    ? new Date((session.user as any).createdAt as string).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : "January 2026";
 
   const stats = [
     {
@@ -209,14 +281,16 @@ export default function ProfilePage() {
           className="flex items-center gap-4"
         >
           <Avatar className="h-16 w-16">
+            {userImage ? <AvatarImage src={userImage} /> : null}
             <AvatarFallback className="bg-primary text-white text-lg font-semibold">
-              HC
+              {initials}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <h2 className="font-heading text-2xl font-bold text-foreground">Home Chef</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Cooking since January 2026
+          <div className="flex-1 min-w-0">
+            <h2 className="font-heading text-2xl font-bold text-foreground truncate">{userName}</h2>
+            <p className="text-sm text-muted-foreground mt-0.5 truncate">{userEmail}</p>
+            <p className="text-xs text-muted-foreground/70 mt-0.5">
+              Cooking since {cookingSince}
             </p>
           </div>
         </motion.div>
@@ -338,6 +412,19 @@ export default function ProfilePage() {
               </div>
             </button>
           ))}
+
+          {/* Sign out */}
+          <Separator className="my-2" />
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex w-full items-center justify-between rounded-lg px-4 py-3.5 transition-colors hover:bg-red-50 active:bg-red-100 text-red-600"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut className="h-5 w-5" />
+              <span className="text-sm font-medium">Sign Out</span>
+            </div>
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </motion.div>
       </div>
     </div>

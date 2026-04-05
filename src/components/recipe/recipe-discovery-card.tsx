@@ -30,7 +30,7 @@ export function RecipeDiscoveryCard({
   className,
 }: RecipeDiscoveryCardProps) {
   const isTop = rank === 1;
-  const image = recipeImageMap[recipe.id] ?? "/images/butter-chicken.jpg";
+  const image = recipeImageMap[recipe.id] ?? "/images/generic-recipe.jpg";
 
   return (
     <Link href={`/recipe/${recipe.id}`} className="block">

@@ -1,5 +1,66 @@
 # CookGenie — Build & Release Log
 
+## [1.4.0] — 2026-04-05 — Authentication & Onboarding
+
+### Google OAuth (Auth.js v5)
+- **Full authentication system** — Google OAuth via `next-auth@beta` + `@auth/drizzle-adapter`
+- **New DB tables**: `users`, `accounts`, `sessions`, `verification_tokens`
+- **Auth flow**: `/login` page with Google sign-in → auto-creates user row → redirects to onboarding
+- **Session management**: secure HTTP-only cookie, server-side session lookup
+- `src/lib/auth/auth.ts` — Auth.js config with Google provider + Drizzle adapter
+- `src/lib/auth/session.ts` — server helpers: `getServerSession()`, `getUserId()`
+- `src/lib/auth/use-session.ts` — client hook re-export (`useSession`, `signIn`, `signOut`)
+- `src/app/api/auth/[...nextauth]/route.ts` — Auth.js API handler at `/api/auth/*`
+- `SessionProvider` wrapping entire app in root layout
+
+### Onboarding Wizard (`/onboarding`)
+- **5-step guided setup** after first login with progress bar:
+  1. **Spice Level** — Mild → Very Hot with emoji cards
+  2. **Dietary Needs** — Vegetarian, Vegan, Gluten-free, Dairy-free, Nut-free, Halal (multi-select)
+  3. **Favorite Cuisines** — Indian, Arabic, Middle Eastern, Italian, Chinese, Mexican, Thai, Mediterranean (multi-select, requires ≥1)
+  4. **Measurement Units** — Metric (grams, ml, °C) or Imperial (oz, cups, °F)
+  5. **Summary Review** — all preferences shown before saving
+- Saves to `user_preferences` table on completion → redirects to home
+- Auto-skips if user already has preferences set
+
+### Profile Page — Auth-Aware
+- **Logged out**: shows "Sign in with Google" CTA with benefits description
+- **Loading**: spinner while checking auth state
+- **Logged in**: shows real user name, email, avatar (from Google), initials fallback
+- **Sign out button** at bottom of profile menu with red styling
+- "Cooking since" date derived from account creation timestamp
+
+### API Routes — Auth-Protected
+- All user-scoped routes now use `getUserId()` instead of hardcoded `DEV_USER`:
+  - `POST /api/saved` — requires auth (401 if anonymous)
+  - `GET /api/saved` — returns empty for anonymous
+  - `POST /api/preferences` — requires auth (401 if anonymous)
+  - `GET /api/preferences` — returns null for anonymous
+  - `POST /api/variants` — requires auth (401 if anonymous)
+  - `GET /api/variants` — returns empty for anonymous
+  - `GET /api/sessions/active` — returns empty for anonymous
+  - `GET /api/sessions/history` — returns empty for anonymous
+  - `POST /api/session` — works for both (falls back to `"anonymous"`)
+  - `POST /api/substitution` — loads personalization prefs when logged in
+
+### Schema Changes
+- `users` table — id, email, name, emailVerified, googleId, avatarUrl, createdAt, updatedAt
+- `accounts` table — OAuth account linkage (provider, providerAccountId, tokens)
+- `sessions` table — Auth.js session storage (sessionToken, userId, expires)
+- `verification_tokens` table — email verification support
+- `userPreferences.userId` — changed from `text` → `uuid` FK → `users.id`
+- Added FK relations from `savedRecipes`, `cookingSessions`, `recipeVariants`, `userPreferences` → `users`
+
+### Recipe Images — Generic Fallback
+- All butter-chicken fallback images replaced with `/images/generic-recipe.jpg`
+- Updated in: `recipe-card.tsx` (3 variants), `recipe-discovery-card.tsx`, `recipe/[id]/page.tsx`, `page.tsx`, `/api/recipes/*`, `/api/saved/*`
+- Unknown/imported recipes now show a neutral placeholder instead of the same butter chicken image
+
+### New Env Variables
+- `GOOGLE_CLIENT_ID` — Google OAuth client ID
+- `GOOGLE_CLIENT_SECRET` — Google OAuth client secret
+- `AUTH_SECRET` — Auth.js session encryption key (`openssl rand -base64 32`)
+
 ## [Unreleased] — 2026-03-31
 
 ### Cook Timer UI Component

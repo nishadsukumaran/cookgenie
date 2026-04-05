@@ -57,6 +57,15 @@ interface ImportPreviewSheetProps {
   onImported?: (data: { id: string; slug: string; title: string }) => void;
 }
 
+const VALID_CATEGORIES = ["protein", "dairy", "spice", "vegetable", "grain", "oil", "other"] as const;
+type ValidCategory = (typeof VALID_CATEGORIES)[number];
+
+function normalizeCategory(category: string | undefined): ValidCategory {
+  if (!category) return "other";
+  const normalized = category.toLowerCase().trim();
+  return VALID_CATEGORIES.includes(normalized as ValidCategory) ? (normalized as ValidCategory) : "other";
+}
+
 const INITIAL_STEPS_SHOWN = 3;
 
 export function ImportPreviewSheet({
@@ -100,7 +109,7 @@ export function ImportPreviewSheet({
         name: String(ing.name || "").trim(),
         amount: Number(ing.amount) || 1,
         unit: String(ing.unit || "piece"),
-        category: ing.category ?? "other",
+        category: normalizeCategory(ing.category),
       })),
       steps: (candidate.steps ?? []).map((step, idx) => ({
         number: idx + 1,

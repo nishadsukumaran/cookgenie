@@ -6,7 +6,8 @@ import {
 
 /**
  * Dev-only analytics endpoint.
- * Returns feedback aggregation, scenario metrics, and AI performance stats.
+ * GET: Returns feedback aggregation, scenario metrics, and AI performance stats.
+ * POST: Accepts diagnostic events (e.g., import attempts) for debugging.
  */
 export async function GET() {
   try {
@@ -39,5 +40,22 @@ export async function GET() {
       performance: { avgAiLatencyMs: 0, totalScenarios: 0, totalFeedback: 0 },
       error: err instanceof Error ? err.message : "Unknown error",
     });
+  }
+}
+
+/**
+ * Accept diagnostic events for debugging.
+ * Currently logs to console in dev; can be extended to persist to DB.
+ */
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    // Log the event for debugging purposes
+    console.log("[analytics] Diagnostic event received:", JSON.stringify(body, null, 2));
+    // TODO: Persist to ai_interactions table or dedicated analytics table
+    return NextResponse.json({ received: true });
+  } catch (err) {
+    console.error("[analytics] Failed to process POST request:", err);
+    return NextResponse.json({ error: "Failed to process event" }, { status: 500 });
   }
 }

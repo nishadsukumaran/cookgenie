@@ -4,6 +4,7 @@ import * as schema from "@/lib/db/schema";
 import type { Ingredient, CookingStep } from "@/lib/engines/types";
 
 const DEV_USER = "dev-user";
+const VALID_CATEGORIES = ["protein", "dairy", "spice", "vegetable", "grain", "oil", "other"] as const;
 
 interface ImportRecipeRequest {
   title: string;
@@ -61,13 +62,19 @@ export async function POST(req: Request) {
     // AI may return amounts/durations as strings — coerce before validating
     const safeIngredients = ingredients
       .filter((ing: Ingredient) => ing.name?.trim()) // drop nameless
-      .map((ing: Ingredient) => ({
-        ...ing,
-        name: String(ing.name).trim(),
-        amount: Number(ing.amount) || 1,
-        unit: String(ing.unit || "piece"),
-        category: ing.category ?? "other",
-      }));
+      .map((ing: Ingredient) => {
+        // Normalize category to valid enum value
+        const rawCategory = String(ing.category || "other").toLowerCase().trim();
+        const category = VALID_CATEGORIES.includes(rawCategory as any) ? rawCategory : "other";
+        
+        return {
+          ...ing,
+          name: String(ing.name).trim(),
+          amount: Number(ing.amount) || 1,
+          unit: String(ing.unit || "piece"),
+          category,
+        };
+      });
 
     // Deduplicate by name (AI sometimes lists the same ingredient twice)
     const seenNames = new Set<string>();
@@ -164,7 +171,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ id: recipe.id, slug: recipe.slug, title });
   } catch (error) {
-    console.error("[POST /api/recipes/import]", error);
+    console.error("[POST /api/recipes/import] Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      error,
+    });
     return NextResponse.json(
       { error: "Failed to import recipe" },
       { status: 500 },

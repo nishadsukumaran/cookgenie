@@ -135,23 +135,31 @@ export function ImportPreviewSheet({
         }),
       }).catch(() => {});
 
+      console.log("[import-preview-sheet] Sending POST to /api/recipes/import");
+      console.log("[import-preview-sheet] Payload:", JSON.stringify(payload, null, 2));
+
       const res = await fetch("/api/recipes/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
+      console.log("[import-preview-sheet] Response status:", res.status, res.ok);
+
       if (res.ok) {
         const data = await res.json();
+        console.log("[import-preview-sheet] Import success:", data);
         setImported(true);
         setTimeout(() => {
           onImported?.(data);
         }, 1200);
       } else {
         const errData = await res.json().catch(() => ({}));
+        console.error("[import-preview-sheet] Import failed:", res.status, errData);
         setError(errData.error ?? `Import failed (${res.status})`);
       }
     } catch (err) {
+      console.error("[import-preview-sheet] Network error:", err);
       setError(`Network error: ${err instanceof Error ? err.message : "Check your connection."}`);
     } finally {
       setImporting(false);

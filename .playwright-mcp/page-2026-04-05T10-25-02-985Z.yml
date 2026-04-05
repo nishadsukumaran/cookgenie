@@ -1,0 +1,10 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e6]:
+        - img [ref=e7]
+        - textbox "Try 'pasta carbonara' or 'healthy dinner'..." [active] [ref=e10]
+      - button "Filters" [ref=e14]:
+        - img [ref=e15]
+        - text: Filters
+  - alert [ref=e35]

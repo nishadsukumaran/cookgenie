@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://cookgenie.vercel.app/api/recipes\")",
+      "Bash(curl -s \"https://cookgenie.vercel.app/api/recipes\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f''''Recipes: {len\\(d.get\\(\"\"recipes\"\",[]\\)\\)}''''\\); [print\\(f''''  - {r[\"\"title\"\"]}''''\\) for r in d.get\\(''''recipes'''',[]\\)]\")",
+      "Bash(curl -s \"https://cookgenie-eight.vercel.app/api/recipes\")",
+      "Bash(curl -s -X POST \"https://cookgenie-eight.vercel.app/api/recipes/search\" -H \"Content-Type: application/json\" -d '{\"\"\"\"query\"\"\"\":\"\"\"\"pasta\"\"\"\"}')",
+      "Bash(curl -s \"https://cookpilot-one.vercel.app/api/recipes\")",
+      "Bash(npx dotenv-cli:*)",
+      "Bash(curl -s -X POST \"https://cookpilot-one.vercel.app/api/recipes/search\" -H \"Content-Type: application/json\" -d '{\"\"\"\"query\"\"\"\":\"\"\"\"pasta carbonara\"\"\"\"}')",
+      "Bash(ls /c/AI/CookGenie/src/app/api/recipes/[slug]/)",
+      "Bash(ls /c/AI/CookGenie/src/app/recipe/[id]/)",
+      "Bash(curl -s \"https://cookpilot-one.vercel.app/api/recipes/spaghetti-aglio-e-olio-b0972d\")",
+      "Bash(git diff:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git commit:*)",
+      "Bash(curl -s -X POST \"https://cookpilot-one.vercel.app/api/ask\" -H \"Content-Type: application/json\" -d '{\"\"\"\"message\"\"\"\":\"\"\"\"I added too much salt to my butter chicken\"\"\"\"}')",
+      "Bash(python3 -c \":*)",
+      "Bash(curl -s -X POST \"https://cookpilot-one.vercel.app/api/substitution\" -H \"Content-Type: application/json\" -d '{\"\"\"\"ingredient\"\"\"\":\"\"\"\"cream\"\"\"\",\"\"\"\"recipeName\"\"\"\":\"\"\"\"Butter Chicken\"\"\"\"}')",
+      "Bash(curl -s -X POST \"https://cookpilot-one.vercel.app/api/session\" -H \"Content-Type: application/json\" -d '{\"\"\"\"recipeId\"\"\"\":\"\"\"\"butter-chicken\"\"\"\",\"\"\"\"recipeName\"\"\"\":\"\"\"\"Butter Chicken\"\"\"\",\"\"\"\"recipeCuisine\"\"\"\":\"\"\"\"Indian\"\"\"\",\"\"\"\"servingsUsed\"\"\"\":4,\"\"\"\"totalSteps\"\"\"\":8}')",
+      "Bash(curl -s -X POST \"https://cookpilot-one.vercel.app/api/session\" -H \"Content-Type: application/json\" -d '{\"\"\"\"action\"\"\"\":\"\"\"\"start\"\"\"\",\"\"\"\"recipeId\"\"\"\":\"\"\"\"butter-chicken\"\"\"\",\"\"\"\"totalSteps\"\"\"\":8,\"\"\"\"servings\"\"\"\":4}')",
+      "Bash(curl -s -w \"\\\\nHTTP: %{http_code}\" -X POST \"https://cookpilot-one.vercel.app/api/session\" -H \"Content-Type: application/json\" -d '{\"\"action\"\":\"\"start\"\",\"\"recipeId\"\":\"\"butter-chicken\"\",\"\"totalSteps\"\":8,\"\"servings\"\":4}')",
+      "Bash(npx tsx:*)",
+      "Bash(git restore:*)",
+      "Bash(spicy\" routes to modification, not recipe-search:*)",
+      "Bash(curl -s \"https://cookpilot-one.vercel.app/api/saved\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://cookpilot-one.vercel.app/saved\")",
+      "Bash(curl -s \"https://cookpilot-one.vercel.app/saved\")",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_run_code",
+      "Bash(head -5 grep -r surface /c/AI/CookGenie/tailwind.config.*)",
+      "Bash(curl -s https://react.dev/errors/31?args[]=object%20with%20keys%20%7B%24%24typeof%2C%20render%2C%20displayName%7D)",
+      "Bash(curl -s \"https://cookpilot-one.vercel.app/api/recipes/butter-chicken\")",
+      "Bash(python3 -c ':*)",
+      "Bash(grep -E '\\\\.\\(json|js|png|jpg|ico|svg|webp\\)$')",
+      "Bash(npm show:*)",
+      "Bash(curl -s -X POST https://cookpilot-one.vercel.app/api/recipes/import -H 'Content-Type: application/json' -d '{\"title\":\"PWA Test\",\"description\":\"test\",\"cuisine\":\"Italian\",\"cookingTime\":10,\"prepTime\":5,\"difficulty\":\"Easy\",\"servings\":2,\"calories\":200,\"tags\":[],\"ingredients\":[{\"name\":\"Pasta\",\"amount\":100,\"unit\":\"g\",\"category\":\"grain\"}],\"steps\":[{\"number\":1,\"instruction\":\"Cook pasta\",\"duration\":10}]}')",
+      "Bash(curl -s -X POST https://cookpilot-one.vercel.app/api/recipes/import -H 'Content-Type: application/json' -d '{\"id\":\"test-uuid\",\"title\":\"Test Biryani\",\"description\":\"Test\",\"why_match\":\"best match\",\"source\":\"ai-generated\",\"cuisine\":\"Indian\",\"cookingTime\":45,\"prepTime\":20,\"difficulty\":\"Medium\",\"servings\":4,\"calories\":500,\"tags\":[\"test\"],\"ingredients\":[{\"name\":\"Rice\",\"amount\":500,\"unit\":\"g\",\"category\":\"grain\"},{\"name\":\"Chicken\",\"amount\":750,\"unit\":\"g\",\"category\":\"protein\"}],\"steps\":[{\"number\":1,\"instruction\":\"Cook rice\",\"duration\":20},{\"number\":2,\"instruction\":\"Layer and dum\",\"duration\":25}]}')",
+      "Bash(curl -s -X POST https://cookpilot-one.vercel.app/api/recipes/import -H 'Content-Type: application/json' -d '{\"title\":\"Deploy Test\",\"description\":\"test\",\"cuisine\":\"Italian\",\"cookingTime\":10,\"prepTime\":\"5\",\"difficulty\":\"Easy\",\"servings\":\"2\",\"calories\":\"300\",\"tags\":[],\"ingredients\":[{\"name\":\"Pasta\",\"amount\":\"200\",\"unit\":\"g\",\"category\":\"grain\"},{\"name\":\"Garlic\",\"amount\":\"3\",\"unit\":\"cloves\"}],\"steps\":[{\"number\":1,\"instruction\":\"Cook pasta\",\"duration\":\"10\"},{\"number\":\"2\",\"instruction\":\"Add garlic\"}]}')",
+      "mcp__plugin_playwright_playwright__browser_fill_form",
+      "mcp__plugin_playwright_playwright__browser_click"
+    ],
+    "additionalDirectories": [
+      "\\tmp",
+      "C:\\AI\\CookGenie\\public\\icons"
+    ]
+  }
+}

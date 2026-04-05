@@ -1,0 +1,16 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Saved" [level=1] [ref=e6]
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - button "Recipes" [ref=e9]:
+            - img [ref=e10]
+            - text: Recipes
+          - button "My Versions" [ref=e12]:
+            - img [ref=e13]
+            - text: My Versions
+        - generic [ref=e18]:
+          - img [ref=e19]
+          - textbox "Search saved recipes..." [ref=e22]
+  - alert [ref=e25]
